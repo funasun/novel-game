@@ -103,27 +103,28 @@ export const useGame = create<GameState>((set, get) => ({
   init: (pack, save) => {
     const initialParams: Record<string, number> = {};
     for (const [key, def] of Object.entries(pack.parameters)) initialParams[key] = def.initial;
-    if (save) {
-      set({
-        pack,
-        time: save.time,
-        params: { ...initialParams, ...save.params },
-        inventory: save.inventory,
-        flags: save.flags,
-        counters: save.counters,
-        quests: save.quests,
-        journal: save.journal,
-        usedInteractables: save.usedInteractables,
-        firedEvents: save.firedEvents,
-        savedPlayer: save.player,
-      });
-    } else {
-      set({
-        pack,
-        time: { day: pack.startTime.day, hour: pack.startTime.hour, minute: 0 },
-        params: initialParams,
-      });
-    }
+    // 毎回まっさらな初期状態を確立してから、セーブがあれば上書きする。
+    // init はホーム⇄ゲームの往復や「最初から」で複数回呼ばれるため、
+    // 前作・前回の flags/quests/inventory や会話中フラグが残らないよう全項目を明示リセットする。
+    set({
+      pack,
+      time: save ? save.time : { day: pack.startTime.day, hour: pack.startTime.hour, minute: 0 },
+      params: save ? { ...initialParams, ...save.params } : initialParams,
+      inventory: save ? save.inventory : {},
+      flags: save ? save.flags : {},
+      counters: save ? save.counters : {},
+      quests: save ? save.quests : [],
+      journal: save ? save.journal : [],
+      usedInteractables: save ? save.usedInteractables : {},
+      firedEvents: save ? save.firedEvents : {},
+      savedPlayer: save ? save.player : null,
+      // 揮発状態は常にリセット
+      nearby: null,
+      dialogue: null,
+      narration: null,
+      learningToast: null,
+      journalOpen: false,
+    });
   },
 
   advanceMinutes: (mins) => {

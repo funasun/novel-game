@@ -103,4 +103,19 @@ export interface ContentPack {
   startTime: { day: number; hour: number };
   spawn: [number, number]; // XZ
   Scene: ComponentType; // 3D舞台（地形・海・小物・NPC）
+
+  // ホーム画面（作品選択）用の表示メタデータ
+  author?: string; // 原作者
+  blurb?: string; // 一行の紹介文（惹句）
+  accent?: string; // カードのアクセント色（hex）
+  Overlay?: ComponentType; // 作品専用の情景オーバーレイ（島の世界の上に重ねるシネマティック等）
+}
+
+// ホーム画面に「準備中」として並べる、まだ実装していない作品の枠
+export interface ComingSoonEntry {
+  id: string;
+  title: string;
+  author: string;
+  blurb: string;
+  accent?: string;
 }

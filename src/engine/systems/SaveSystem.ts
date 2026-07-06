@@ -74,8 +74,12 @@ export async function loadGame(packId: string): Promise<SaveData | undefined> {
   }
 }
 
-export async function resetGame(packId: string): Promise<void> {
+export async function deleteSave(packId: string): Promise<void> {
   await idbDelete(`${packId}/${SLOT}`);
+}
+
+export async function resetGame(packId: string): Promise<void> {
+  await deleteSave(packId);
   location.reload();
 }
 

@@ -1,5 +1,6 @@
 import type { ContentPack, InteractableDef } from '../../engine/types';
 import { IslandScene } from './scene/IslandScene';
+import { Cinematic } from './scene/Cinematic';
 import {
   SPAWN,
   SHIP,
@@ -68,6 +69,10 @@ const firewood: InteractableDef[] = FIREWOOD_POINTS.map((p, i) => ({
 export const twoYearsVacation: ContentPack = {
   id: 'two-years-vacation',
   title: '十五少年漂流記',
+  author: 'ジュール・ヴェルヌ',
+  blurb: '嵐の夜、大人のいない帆船で少年十五人が漂着した無人島。二年間のサバイバルと成長を、生活しながら体験する。',
+  accent: '#2f7d8c',
+  Overlay: Cinematic,
 
   parameters: {
     stamina: { label: '体力', min: 0, max: 100, initial: 100 },

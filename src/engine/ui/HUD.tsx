@@ -15,7 +15,7 @@ const overlay: CSSProperties = {
   zIndex: 10,
 };
 
-export function HUD() {
+export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: () => void } = {}) {
   const pack = useGame((s) => s.pack);
   const time = useGame((s) => s.time);
   const params = useGame((s) => s.params);
@@ -66,10 +66,12 @@ export function HUD() {
         )}
         <div style={{ pointerEvents: 'auto', display: 'inline-flex', gap: 8 }}>
           <HudButton onClick={() => setJournalOpen(true)}>手帳 (J)</HudButton>
+          {onHome && <HudButton onClick={onHome}>ホーム</HudButton>}
           <HudButton
             onClick={() => {
               if (confirm('最初からやり直しますか？（セーブデータを消します）')) {
-                void resetGame(pack.id);
+                if (onRestart) onRestart();
+                else void resetGame(pack.id);
               }
             }}
           >
