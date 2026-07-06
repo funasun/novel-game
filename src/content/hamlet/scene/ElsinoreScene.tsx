@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { setGround } from '../../../engine/ground';
+import { Solid } from '../../../engine/Solid';
 import { Character, CharacterPalette } from '../../../engine/Character';
 import { useGame } from '../../../engine/store/gameStore';
 import {
@@ -324,10 +325,14 @@ function Figure({
   const [x, z] = position;
   const ry = facing ?? faceOrigin(position);
   return (
-    <group position={[x, 0, z]} rotation={[0, ry, 0]} scale={scale}>
-      <Character palette={palette} />
-      {crown && <CrownProp color={crown} />}
-    </group>
+    <>
+      {/* 人をすり抜けない：立ち位置に当たり判定 */}
+      <Solid x={x} z={z} r={0.55 * scale} />
+      <group position={[x, 0, z]} rotation={[0, ry, 0]} scale={scale}>
+        <Character palette={palette} />
+        {crown && <CrownProp color={crown} />}
+      </group>
+    </>
   );
 }
 

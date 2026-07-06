@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { setGround } from '../../../engine/ground';
+import { addObstacle } from '../../../engine/obstacles';
 import {
   buildIslandGeometry,
   islandHeight,
@@ -94,16 +95,17 @@ function Ocean() {
 }
 
 function Vegetation() {
+  const trees = useMemo(
+    () => scatterOnIsland(200, 1234, (h, slope) => h > 1.4 && h < 11 && slope < 0.75),
+    [],
+  );
+  const rocks = useMemo(() => scatterOnIsland(70, 5678, (h) => h > 0.3 && h < 14), []);
+
   const group = useMemo(() => {
     const g = new THREE.Group();
     const color = new THREE.Color();
 
     // 広葉樹（草地に生える）
-    const trees = scatterOnIsland(
-      200,
-      1234,
-      (h, slope) => h > 1.4 && h < 11 && slope < 0.75,
-    );
     const trunkGeo = new THREE.CylinderGeometry(0.13, 0.22, 1.5, 5);
     const trunkMat = new THREE.MeshStandardMaterial({ color: '#7a5a3a', flatShading: true });
     const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, trees.length);
@@ -130,7 +132,6 @@ function Vegetation() {
     canopies.instanceColor!.needsUpdate = true;
 
     // 岩
-    const rocks = scatterOnIsland(70, 5678, (h) => h > 0.3 && h < 14);
     const rockGeo = new THREE.IcosahedronGeometry(0.7, 0);
     const rockMat = new THREE.MeshStandardMaterial({ flatShading: true });
     const rockMesh = new THREE.InstancedMesh(rockGeo, rockMat, rocks.length);
@@ -166,7 +167,18 @@ function Vegetation() {
 
     g.add(trunks, canopies, rockMesh, tuftMesh);
     return g;
-  }, []);
+  }, [trees, rocks]);
+
+  // 幹と岩はすり抜け不可（葉・草は対象外）。散らばる位置に当たり判定を張る。
+  useEffect(() => {
+    const undo: Array<() => void> = [];
+    for (const p of trees) undo.push(addObstacle({ x: p.x, z: p.z, r: 0.5 }));
+    for (const p of rocks) {
+      const s = 0.5 + p.rand * 1.6; // Vegetation の岩スケールと一致
+      undo.push(addObstacle({ x: p.x, z: p.z, r: 0.4 + s * 0.3 }));
+    }
+    return () => undo.forEach((f) => f());
+  }, [trees, rocks]);
 
   return <primitive object={group} />;
 }

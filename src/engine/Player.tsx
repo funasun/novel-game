@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getGround } from './ground';
+import { obstructed } from './obstacles';
 import { playerPosition } from './playerState';
 import { Character, Limbs } from './Character';
 import { useGame, isUiLocked } from './store/gameStore';
@@ -90,12 +91,18 @@ export function Player() {
     const p = root.current.position;
     if (moving) {
       move.normalize().multiplyScalar(MOVE_SPEED * delta);
-      const nx = p.x + move.x;
-      const nz = p.z + move.z;
-      if (ground.isWalkable(nx, nz)) {
-        p.x = nx;
-        p.z = nz;
-      }
+      // 通れる先か？＝地形が歩行可 かつ 人・物にめり込まない。
+      const free = (x: number, z: number) => ground.isWalkable(x, z) && !obstructed(x, z);
+      const step = (dx: number, dz: number) => {
+        if (free(p.x + dx, p.z + dz)) {
+          p.x += dx;
+          p.z += dz;
+          return true;
+        }
+        return false;
+      };
+      // まず全方向、ダメなら壁ずり（片軸ずつ）。障害物に沿って滑れて引っかからない。
+      if (!step(move.x, move.z) && !step(move.x, 0)) step(0, move.z);
       const targetAngle = Math.atan2(move.x, move.z);
       let diff = targetAngle - body.current.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));

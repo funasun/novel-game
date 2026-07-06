@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { ContentPack, Effects } from '../types';
+import { clearObstacles } from '../obstacles';
 
 // Layer 1: ゲーム状態の一元管理。エンジンはパラメータやフラグの「意味」を知らない。
 
@@ -101,6 +102,9 @@ export const useGame = create<GameState>((set, get) => ({
   savedPlayer: null,
 
   init: (pack, save) => {
+    // 前作・前回の当たり判定が残らないよう作り直しの起点でクリア
+    // （Scene 再マウントでも Solid は片付くが、念のため明示リセット）。
+    clearObstacles();
     const initialParams: Record<string, number> = {};
     for (const [key, def] of Object.entries(pack.parameters)) initialParams[key] = def.initial;
     // 毎回まっさらな初期状態を確立してから、セーブがあれば上書きする。

@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGame } from '../../../engine/store/gameStore';
+import { Solid } from '../../../engine/Solid';
 import { Character, type CharacterPalette } from '../../../engine/Character';
 import { playerPosition } from '../../../engine/playerState';
 import { islandHeight } from '../../../shared-assets/procedural/terrain';
@@ -164,6 +165,7 @@ function Campfire({ x, z }: { x: number; z: number }) {
 
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.55} />
       {[0, 1, 2].map((i) => (
         <mesh
           key={i}
@@ -242,9 +244,13 @@ function CampBoy({
   });
 
   return (
-    <group ref={group} position={[x, y, z]} scale={scale}>
-      <Character palette={palette} />
-    </group>
+    <>
+      {/* 人をすり抜けない：立ち位置に当たり判定 */}
+      <Solid x={x} z={z} r={0.5 * scale} />
+      <group ref={group} position={[x, y, z]} scale={scale}>
+        <Character palette={palette} />
+      </group>
+    </>
   );
 }
 
@@ -259,6 +265,10 @@ function ShipWreck() {
   const y = Math.max(islandHeight(x, z), -0.2) - 0.55;
   return (
     <group position={[x, y, z]} rotation={[0, -0.65, 0]}>
+      {/* 船体をすり抜けない：船軸に沿って三つの当たり判定 */}
+      <Solid x={x + 3.18} z={z + 2.42} r={2.2} />
+      <Solid x={x} z={z} r={2.2} />
+      <Solid x={x - 3.18} z={z - 2.42} r={2.2} />
       {/* 傾いた船体一式 */}
       <group rotation={[0.04, 0, 0.2]} position={[0, 0.2, 0]}>
         <mesh castShadow position={[0, 1.25, 0]}>
@@ -326,6 +336,10 @@ function CaveMassif() {
   const y = islandHeight(cx, cz);
   return (
     <group position={[cx, y, cz]}>
+      {/* 岩山をすり抜けない。前庭（東側）は少年たちがいるので空けておく */}
+      <Solid x={cx - 1.5} z={cz} r={2.6} />
+      <Solid x={cx - 2.2} z={cz + 3.8} r={1.8} />
+      <Solid x={cx - 1.8} z={cz - 4.2} r={1.8} />
       <mesh castShadow position={[0, 2.2, 0]} scale={[4.6, 4.4, 6.5]}>
         <icosahedronGeometry args={[1, 0]} />
         <meshStandardMaterial color={ROCK} flatShading />
@@ -353,6 +367,7 @@ function LookoutCairn() {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.6} />
       {[0.5, 0.34, 0.2].map((r, i) => (
         <mesh key={i} castShadow position={[0, 0.3 + i * 0.55, 0]}>
           <icosahedronGeometry args={[r, 0]} />
@@ -369,6 +384,7 @@ function NorthCamp() {
   const y = islandHeight(x, z);
   return (
     <>
+      <Solid x={x} z={z} r={1.3} />
       <group position={[x, y, z]}>
         <mesh castShadow position={[0, 0.75, 0]} rotation={[0, 0.4, 0]}>
           <coneGeometry args={[1.5, 1.8, 4]} />
@@ -422,6 +438,7 @@ function Boat() {
   const y = Math.max(islandHeight(x, z), -0.15);
   return (
     <group position={[x, y, z]} rotation={[0, 0.5, 0]}>
+      <Solid x={x} z={z} r={2} />
       <mesh castShadow position={[0, 0.55, 0]}>
         <boxGeometry args={[5.4, 1.0, 1.9]} />
         <meshStandardMaterial color={HULL} flatShading />
@@ -453,6 +470,7 @@ function BaudoinGrave({ flowers }: { flowers: boolean }) {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.9} />
       <mesh castShadow position={[0, 0.12, 0]} scale={[1, 0.4, 1.6]}>
         <sphereGeometry args={[0.7, 8, 6]} />
         <meshStandardMaterial color="#5a4a38" flatShading />
@@ -489,6 +507,7 @@ function Signpost({ pos }: { pos: [number, number] }) {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.35} />
       <mesh castShadow position={[0, 0.75, 0]}>
         <cylinderGeometry args={[0.06, 0.08, 1.5, 6]} />
         <meshStandardMaterial color="#6b4c30" flatShading />
@@ -507,6 +526,7 @@ function TrapFrame() {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.5} />
       <mesh castShadow position={[0.5, 0.6, 0]} rotation={[0, 0, -0.7]}>
         <cylinderGeometry args={[0.04, 0.06, 1.7, 5]} />
         <meshStandardMaterial color="#5a6a3a" flatShading />
@@ -536,6 +556,7 @@ function SevernCross() {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]} rotation={[0, -0.5, 0]}>
+      <Solid x={x} z={z} r={0.5} />
       <mesh castShadow position={[0, 1.1, 0]}>
         <boxGeometry args={[0.14, 2.2, 0.14]} />
         <meshStandardMaterial color="#8a6844" flatShading />
@@ -563,6 +584,7 @@ function Seals() {
   const y = Math.max(islandHeight(x, z), 0);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={1.6} />
       {[
         [0, 0, 0, 1],
         [1.4, 0.6, 2.2, 0.8],
@@ -615,6 +637,7 @@ function SapBucket() {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.55} />
       <mesh castShadow position={[0, 1.6, 0]}>
         <cylinderGeometry args={[0.28, 0.4, 3.2, 7]} />
         <meshStandardMaterial color="#5d4630" flatShading />
@@ -650,6 +673,7 @@ function Dog() {
 
   return (
     <group position={[x, y, z]} rotation={[0, -0.6, 0]}>
+      <Solid x={x} z={z} r={0.4} />
       {/* 胴体 */}
       <mesh castShadow position={[0, 0.42, 0]} scale={[0.42, 0.4, 0.85]}>
         <sphereGeometry args={[0.55, 8, 6]} />
@@ -706,6 +730,7 @@ function SignalMast() {
 
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.5} />
       <mesh castShadow position={[0, 3, 0]}>
         <cylinderGeometry args={[0.07, 0.12, 6, 6]} />
         <meshStandardMaterial color="#6b4c30" flatShading />
@@ -740,6 +765,7 @@ function Rhea() {
 
   return (
     <group position={[x, y, z]} rotation={[0, 1.1, 0]}>
+      <Solid x={x} z={z} r={0.8} />
       {/* 胴体 */}
       <mesh castShadow position={[0, 1.05, 0]} scale={[0.75, 0.62, 1.05]}>
         <sphereGeometry args={[0.75, 8, 6]} />
@@ -792,6 +818,7 @@ function Kitchen() {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.7} />
       {/* 焼き串（二本の叉木＋横棒） */}
       {[-0.5, 0.5].map((sx) => (
         <mesh key={sx} castShadow position={[sx, 0.4, 0]}>
@@ -824,6 +851,7 @@ function Woodpile({ grown }: { grown: boolean }) {
   const layers = grown ? 4 : 2;
   return (
     <group position={[x, y, z]}>
+      <Solid x={x} z={z} r={0.8} />
       {[...Array(layers)].map((_, row) =>
         [...Array(4 - Math.floor(row / 2))].map((_, i) => (
           <mesh
@@ -847,6 +875,9 @@ function GuanacoCorral() {
   const y = islandHeight(x, z);
   return (
     <group position={[x, y, z]}>
+      {/* 囲いの中の獣をすり抜けない */}
+      <Solid x={x + 0.8} z={z - 0.5} r={0.9} />
+      <Solid x={x - 1.1} z={z + 0.9} r={0.9} />
       {/* 柵 */}
       {[...Array(10)].map((_, i) => {
         const a = (i / 10) * Math.PI * 2;
