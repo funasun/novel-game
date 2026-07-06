@@ -14,7 +14,9 @@ export function NarrationOverlay() {
       style={{
         position: 'absolute',
         inset: 0,
-        background: 'rgba(4, 8, 14, 0.72)',
+        // 中央（文字の背後）は濃く＝可読性、縁は淡く＝背後の情景（船・海）を覗かせる
+        background:
+          'radial-gradient(ellipse 80% 65% at 50% 50%, rgba(4,8,14,0.82) 0%, rgba(4,8,14,0.64) 46%, rgba(4,8,14,0.36) 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
