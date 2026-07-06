@@ -29,8 +29,32 @@ function usePortrait(): boolean {
   return portrait;
 }
 
+// 実際に見えているビューポートの寸法（px）。CSS の vw/vh は iOS のツールバーで
+// ずれるため、強制回転の器は window / visualViewport の実測値で組む。
+function useViewportSize(): { w: number; h: number } {
+  const [size, setSize] = useState(() => ({
+    w: typeof window === 'undefined' ? 0 : window.innerWidth,
+    h: typeof window === 'undefined' ? 0 : window.innerHeight,
+  }));
+  useEffect(() => {
+    const update = () => setSize({ w: window.innerWidth, h: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      vv?.removeEventListener('resize', update);
+    };
+  }, []);
+  return size;
+}
+
 export function OrientationGate({ children }: { children: ReactNode }) {
   const portrait = usePortrait();
+  const { w, h } = useViewportSize();
   const [forced, setForced] = useState(false);
   const [count, setCount] = useState(COUNTDOWN_SEC);
   const timerRef = useRef<number | undefined>(undefined);
@@ -70,14 +94,15 @@ export function OrientationGate({ children }: { children: ReactNode }) {
   const rotate = portrait && forced;
 
   // 強制回転時：ビューポートを 90° 回して、縦画面上に横画面のレイアウトを敷く。
-  // vw/vh はビューポート基準のままなので、幅=100vh・高さ=100vw で論理的に横長になる。
+  // 実測 px（w=innerWidth, h=innerHeight）で器を組む。top-left 原点で 90° 回すと
+  // 幅 h・高さ w の矩形が画面 (w×h) にぴたり収まる（見切れ・余白を防ぐ）。
   const wrapperStyle: CSSProperties = rotate
     ? {
         position: 'absolute',
         top: 0,
-        left: '100vw',
-        width: '100vh',
-        height: '100vw',
+        left: w,
+        width: h,
+        height: w,
         transformOrigin: 'top left',
         transform: 'rotate(90deg)',
         overflow: 'hidden',

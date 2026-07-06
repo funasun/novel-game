@@ -35,7 +35,13 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
   return (
     <div style={overlay}>
       {/* 左上: タイトル・日付・時刻 */}
-      <div style={{ position: 'absolute', top: 18, left: 24 }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 'calc(18px + env(safe-area-inset-top))',
+          left: 'calc(24px + env(safe-area-inset-left))',
+        }}
+      >
         <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 2, opacity: 0.9 }}>
           {pack.title}
         </div>
@@ -46,7 +52,14 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
       </div>
 
       {/* 右上: 目標・手帳・リセット */}
-      <div style={{ position: 'absolute', top: 18, right: 24, textAlign: 'right' }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 'calc(18px + env(safe-area-inset-top))',
+          right: 'calc(24px + env(safe-area-inset-right))',
+          textAlign: 'right',
+        }}
+      >
         {questDef && (
           <div
             style={{
@@ -84,8 +97,8 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
       <div
         style={{
           position: 'absolute',
-          bottom: 18,
-          left: 24,
+          bottom: 'calc(18px + env(safe-area-inset-bottom))',
+          left: 'calc(24px + env(safe-area-inset-left))',
           width: 180,
           opacity: uiLocked ? 0 : 1,
           transition: 'opacity 0.3s',
@@ -108,8 +121,8 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
         <div
           style={{
             position: 'absolute',
-            bottom: 18,
-            right: 24,
+            bottom: 'calc(18px + env(safe-area-inset-bottom))',
+            right: 'calc(24px + env(safe-area-inset-right))',
             textAlign: 'right',
             opacity: uiLocked ? 0 : 1,
             transition: 'opacity 0.3s',
@@ -138,7 +151,7 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
         <div
           style={{
             position: 'absolute',
-            bottom: 90,
+            bottom: 'calc(90px + env(safe-area-inset-bottom))',
             left: 0,
             right: 0,
             textAlign: 'center',
@@ -173,7 +186,7 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
       <div
         style={{
           position: 'absolute',
-          bottom: 4,
+          bottom: 'calc(4px + env(safe-area-inset-bottom))',
           left: 0,
           right: 0,
           textAlign: 'center',

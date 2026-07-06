@@ -14,6 +14,7 @@ export function World({ children }: { children: ReactNode }) {
       shadows
       dpr={[1, 2]}
       camera={{ fov: 50, near: 0.5, far: 1400, position: [0, 25, 40] }}
+      resize={{ offsetSize: true }}
       style={{ position: 'absolute', inset: 0 }}
     >
       <color attach="background" args={['#aee2f5']} />

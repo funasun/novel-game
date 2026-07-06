@@ -38,6 +38,7 @@ export function HamletOverlay() {
       <Canvas
         dpr={[1, 2]}
         camera={{ fov: 48, near: 0.5, far: 200, position: [0, 3.1, 13] }}
+        resize={{ offsetSize: true }}
         style={{ position: 'absolute', inset: 0 }}
       >
         <GhostApparition />

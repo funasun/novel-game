@@ -39,6 +39,7 @@ export function Cinematic() {
       <Canvas
         dpr={[1, 2]}
         camera={{ fov: 46, near: 0.5, far: 600, position: [2, 7.2, 25] }}
+        resize={{ offsetSize: true }}
         style={{ position: 'absolute', inset: 0 }}
       >
         <ShipVoyage />
