@@ -10,6 +10,7 @@ import { EventSystem } from './engine/systems/EventSystem';
 import { AutoSave, loadGame } from './engine/systems/SaveSystem';
 import { useGame } from './engine/store/gameStore';
 import { twoYearsVacation } from './content/two-years-vacation/pack';
+import { Cinematic } from './content/two-years-vacation/scene/Cinematic';
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -46,6 +47,7 @@ export default function App() {
           <twoYearsVacation.Scene />
           <Player />
         </World>
+        <Cinematic />
         <HUD />
         <DialogueBox />
         <NarrationOverlay />

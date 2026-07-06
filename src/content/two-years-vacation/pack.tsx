@@ -774,6 +774,8 @@ export const twoYearsVacation: ContentPack = {
             '1860年3月、未明。轟音とともに、船は名も知らぬ陸地の浜に乗り上げた。',
           ],
         },
+        // 乗り上げの瞬間：嵐の船シーンをフェードアウトし、浜辺（島の世界）へ切り替える
+        { type: 'effects', effects: { flags: ['ashore'] } },
         { type: 'dialogue', id: 'dlg_intro' },
       ],
     },
