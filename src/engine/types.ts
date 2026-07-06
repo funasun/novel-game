@@ -37,6 +37,7 @@ export interface QuestDef {
   title: string;
   description: string;
   goal?: QuestGoal; // 無ければイベント側で明示的に完了させる
+  waypoint?: [number, number]; // XZ。目標地点の光の柱と方位ガイドを出す（無ければ誘導なし）
 }
 
 export type EventTrigger =

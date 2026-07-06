@@ -1,7 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame, isUiLocked } from '../store/gameStore';
 import { timePhase } from '../systems/TimeSystem';
 import { resetGame } from '../systems/SaveSystem';
+import { guidance } from '../guidance';
 
 // Layer 1: HUD。認知負荷最小 — 日付/時刻、進行中の目標、生活パラメータ、所持品、
 // インタラクトのプロンプトのみ。世界そのものに語らせる。
@@ -31,6 +33,18 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
   const questDef = activeQuest ? pack.quests[activeQuest.id] : null;
   const nearbyDef = nearby ? pack.interactables.find((d) => d.id === nearby) : null;
   const items = Object.entries(inventory).filter(([, n]) => n > 0);
+
+  // 目標が切り替わったら、右上のパネルを一瞬光らせて「新しい目標」に気づかせる。
+  const [questFlash, setQuestFlash] = useState(false);
+  const prevQuestId = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const id = questDef?.id;
+    if (!id || id === prevQuestId.current) return;
+    prevQuestId.current = id;
+    setQuestFlash(true);
+    const timer = setTimeout(() => setQuestFlash(false), 2800);
+    return () => clearTimeout(timer);
+  }, [questDef?.id]);
 
   return (
     <div style={overlay}>
@@ -68,13 +82,20 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
               padding: '8px 14px',
               marginBottom: 8,
               maxWidth: 280,
+              boxShadow: questFlash
+                ? '0 0 0 2px rgba(232,213,155,0.9), 0 0 20px rgba(232,213,155,0.55)'
+                : '0 0 0 0 rgba(232,213,155,0)',
+              transition: 'box-shadow 0.5s',
             }}
           >
-            <div style={{ fontSize: 11, opacity: 0.7, letterSpacing: 1 }}>目標</div>
+            <div style={{ fontSize: 11, opacity: 0.7, letterSpacing: 1 }}>
+              {questFlash ? '新しい目標' : '目標'}
+            </div>
             <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>{questDef.title}</div>
             <div style={{ fontSize: 11.5, opacity: 0.8, marginTop: 2 }}>
               {questDef.description}
             </div>
+            <QuestGuide />
           </div>
         )}
         <div style={{ pointerEvents: 'auto', display: 'inline-flex', gap: 8 }}>
@@ -196,6 +217,78 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
       >
         WASD：移動　ドラッグ：カメラ　E：調べる　J：手帳
       </div>
+    </div>
+  );
+}
+
+// 目標地点への方向矢印と距離。3D世界（Waypoint）が毎フレーム書き込む guidance を rAF で読む。
+// 「▲」は上向き＝正面。カメラの向きに対して目標がどちらかを、矢印を回して示す。
+function QuestGuide() {
+  const [g, setG] = useState({ active: false, distance: 0, relAngle: 0 });
+  const last = useRef({ active: false, d: -1, a: 0 });
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const d = Math.round(guidance.distance);
+      const a = guidance.relAngle;
+      // 表示が変わるときだけ再描画（毎フレームの再レンダを避ける）。
+      if (
+        guidance.active !== last.current.active ||
+        d !== last.current.d ||
+        Math.abs(a - last.current.a) > 0.03
+      ) {
+        last.current = { active: guidance.active, d, a };
+        setG({ active: guidance.active, distance: guidance.distance, relAngle: a });
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  if (!g.active) return null;
+  const arrived = g.distance <= 3;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 8,
+        marginTop: 8,
+        paddingTop: 7,
+        borderTop: '1px solid rgba(255,255,255,0.12)',
+      }}
+    >
+      <span style={{ fontSize: 11.5, opacity: 0.85 }}>
+        {arrived ? 'このあたりだ' : `目標地点まで 約${Math.round(g.distance)}m`}
+      </span>
+      <span
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: '50%',
+          background: 'rgba(232,213,155,0.18)',
+          border: '1px solid rgba(232,213,155,0.5)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            display: 'inline-block',
+            fontSize: 14,
+            lineHeight: 1,
+            color: '#f0dca0',
+            transform: arrived ? 'none' : `rotate(${g.relAngle}rad)`,
+          }}
+        >
+          {arrived ? '◎' : '▲'}
+        </span>
+      </span>
     </div>
   );
 }

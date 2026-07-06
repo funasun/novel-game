@@ -5,6 +5,7 @@ import { HUD } from './engine/ui/HUD';
 import { DialogueBox } from './engine/ui/DialogueBox';
 import { NarrationOverlay } from './engine/ui/NarrationOverlay';
 import { LearningToast, Journal } from './engine/learning/LearningLayer';
+import { ControlsTutorial } from './engine/ui/ControlsTutorial';
 import { OrientationGate } from './engine/ui/OrientationGate';
 import { HomeScreen } from './engine/ui/HomeScreen';
 import { EventSystem } from './engine/systems/EventSystem';
@@ -65,6 +66,7 @@ export default function App() {
           </World>
           {pack.Overlay && <pack.Overlay />}
           <HUD onHome={() => void goHome()} onRestart={() => void restart()} />
+          <ControlsTutorial />
           <DialogueBox />
           <NarrationOverlay />
           <LearningToast />

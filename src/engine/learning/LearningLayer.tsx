@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useGame } from '../store/gameStore';
 
 // Layer 1: 教育の核「答え合わせ」。体験の直後に、さりげなく短い挿話を出す。
@@ -90,9 +91,14 @@ export function Journal() {
           color: '#efe6cf',
         }}
       >
-        <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: 2, marginBottom: 14 }}>
-          手帳 — 島の暮らしで学んだこと
+        <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>
+          手帳
         </div>
+
+        <Objectives />
+        <Inventory />
+
+        <SectionHeader>学んだこと</SectionHeader>
         {journal.length === 0 && (
           <div style={{ fontSize: 13, opacity: 0.6 }}>まだ何も記されていない。</div>
         )}
@@ -121,6 +127,108 @@ export function Journal() {
   );
 }
 
+// 手帳の見出し（各セクション共通）。
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: 15,
+        fontWeight: 700,
+        letterSpacing: 2,
+        marginTop: 22,
+        marginBottom: 6,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// いまの目標（進行中クエスト）と、たどってきた道（達成済み）。「途中で何をすべきか」を手帳で確認できる。
+function Objectives() {
+  const quests = useGame((s) => s.quests);
+  const pack = useGame((s) => s.pack);
+  if (!pack || quests.length === 0) return null;
+  const active = quests.filter((q) => q.status === 'active');
+  const done = quests.filter((q) => q.status === 'done');
+  return (
+    <>
+      <SectionHeader>いまの目標</SectionHeader>
+      {active.length === 0 && (
+        <div style={{ fontSize: 12.5, opacity: 0.6, padding: '4px 0' }}>
+          いまは、心のむくままに。
+        </div>
+      )}
+      {active.map((q) => {
+        const def = pack.quests[q.id];
+        if (!def) return null;
+        return (
+          <div key={q.id} style={{ padding: '7px 0' }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+              <span style={{ color: '#f0dca0', marginRight: 8 }}>◇</span>
+              {def.title}
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.82, marginTop: 3, marginLeft: 22 }}>
+              {def.description}
+            </div>
+          </div>
+        );
+      })}
+      {done.length > 0 && (
+        <div style={{ marginTop: 6, paddingTop: 8, borderTop: '1px solid rgba(214,190,140,0.2)' }}>
+          {done.map((q) => {
+            const def = pack.quests[q.id];
+            if (!def) return null;
+            return (
+              <div
+                key={q.id}
+                style={{ fontSize: 12, opacity: 0.5, padding: '3px 0', marginLeft: 2 }}
+              >
+                <span style={{ color: '#8fd17a', marginRight: 8 }}>✓</span>
+                {def.title}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
+// 持ちもの（所持品）。HUD右下は一時表示なので、腰を据えて確認できる場所を手帳に置く。
+function Inventory() {
+  const inventory = useGame((s) => s.inventory);
+  const pack = useGame((s) => s.pack);
+  if (!pack) return null;
+  const items = Object.entries(inventory).filter(([, n]) => n > 0);
+  return (
+    <>
+      <SectionHeader>持ちもの</SectionHeader>
+      {items.length === 0 ? (
+        <div style={{ fontSize: 12.5, opacity: 0.6, padding: '4px 0' }}>まだ何も持っていない。</div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 4 }}>
+          {items.map(([id, n]) => (
+            <span
+              key={id}
+              style={{
+                background: 'rgba(214,190,140,0.14)',
+                border: '1px solid rgba(214,190,140,0.35)',
+                borderRadius: 8,
+                padding: '6px 12px',
+                fontSize: 12.5,
+              }}
+            >
+              {pack.items[id]?.label ?? id}
+              <b style={{ color: '#f0dca0', marginLeft: 6 }}>× {n}</b>
+            </span>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 // 人物紹介（note を持つキャラクターの一覧）。データは全てコンテンツ側。
 function CharacterRoster() {
   const pack = useGame((s) => s.pack);
@@ -129,17 +237,7 @@ function CharacterRoster() {
   if (cast.length === 0) return null;
   return (
     <>
-      <div
-        style={{
-          fontSize: 15,
-          fontWeight: 700,
-          letterSpacing: 2,
-          marginTop: 22,
-          marginBottom: 6,
-        }}
-      >
-        なかま
-      </div>
+      <SectionHeader>なかま</SectionHeader>
       {cast.map(([id, c]) => (
         <div
           key={id}
