@@ -4,6 +4,12 @@ import { useGame, isUiLocked } from '../store/gameStore';
 import { timePhase } from '../systems/TimeSystem';
 import { resetGame } from '../systems/SaveSystem';
 import { guidance } from '../guidance';
+import {
+  fullscreenSupported,
+  isFullscreen,
+  toggleAppFullscreen,
+  onFullscreenChange,
+} from '../fullscreen';
 
 // Layer 1: HUD。認知負荷最小 — 日付/時刻、進行中の目標、生活パラメータ、所持品、
 // インタラクトのプロンプトのみ。世界そのものに語らせる。
@@ -45,6 +51,15 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
     const timer = setTimeout(() => setQuestFlash(false), 2800);
     return () => clearTimeout(timer);
   }, [questDef?.id]);
+
+  // 全画面トグル（要素の全画面APIが使える端末のみ表示。iPhone Safari では非表示）。
+  const canFullscreen = fullscreenSupported();
+  const [fs, setFs] = useState(false);
+  useEffect(() => {
+    if (!canFullscreen) return;
+    setFs(isFullscreen());
+    return onFullscreenChange(() => setFs(isFullscreen()));
+  }, [canFullscreen]);
 
   return (
     <div style={overlay}>
@@ -99,6 +114,11 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
           </div>
         )}
         <div style={{ pointerEvents: 'auto', display: 'inline-flex', gap: 8 }}>
+          {canFullscreen && (
+            <HudButton onClick={() => void toggleAppFullscreen()}>
+              {fs ? '全画面解除' : '全画面'}
+            </HudButton>
+          )}
           <HudButton onClick={() => setJournalOpen(true)}>手帳 (J)</HudButton>
           {onHome && <HudButton onClick={onHome}>ホーム</HudButton>}
           <HudButton

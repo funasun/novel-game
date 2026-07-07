@@ -7,10 +7,12 @@ import { NarrationOverlay } from './engine/ui/NarrationOverlay';
 import { LearningToast, Journal } from './engine/learning/LearningLayer';
 import { ControlsTutorial } from './engine/ui/ControlsTutorial';
 import { OrientationGate } from './engine/ui/OrientationGate';
+import { InstallHint } from './engine/ui/InstallHint';
 import { HomeScreen } from './engine/ui/HomeScreen';
 import { EventSystem } from './engine/systems/EventSystem';
 import { AutoSave, loadGame, saveGame, deleteSave } from './engine/systems/SaveSystem';
 import { useGame } from './engine/store/gameStore';
+import { requestAppFullscreen, isTouchDevice } from './engine/fullscreen';
 import type { ContentPack } from './engine/types';
 import { PACKS, COMING_SOON } from './content/catalog';
 
@@ -23,6 +25,9 @@ export default function App() {
 
   // ホーム画面から作品を選んで入る。fresh=true は「はじめから」（セーブ無視）。
   const enter = async (p: ContentPack, fresh: boolean) => {
+    // 作品を開く=没入の入口。スマホではブラウザのURLバー等を隠して全画面に。
+    // このタップはユーザー操作なので許可される。await より前＝操作直後に呼ぶこと（活性が切れる前）。
+    if (isTouchDevice()) void requestAppFullscreen();
     setBusy(true);
     const save = fresh ? undefined : await loadGame(p.id);
     useGame.getState().init(p, save);
@@ -67,6 +72,7 @@ export default function App() {
           {pack.Overlay && <pack.Overlay />}
           <HUD onHome={() => void goHome()} onRestart={() => void restart()} />
           <ControlsTutorial />
+          <InstallHint />
           <DialogueBox />
           <NarrationOverlay />
           <LearningToast />

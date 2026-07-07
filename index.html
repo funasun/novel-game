@@ -6,6 +6,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
+    <!-- ホーム画面に追加した際、ブラウザUI（URLバー等）を消して全画面起動する。
+         iPhone Safari は要素の全画面APIを持たないため、これが真の全画面への唯一の道。 -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="名作古典ゲーム" />
     <title>十五少年漂流記</title>
     <style>
       html, body {
