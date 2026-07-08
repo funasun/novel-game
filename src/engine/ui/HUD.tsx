@@ -9,6 +9,7 @@ import {
   isFullscreen,
   toggleAppFullscreen,
   onFullscreenChange,
+  isTouchDevice,
 } from '../fullscreen';
 
 // Layer 1: HUD。認知負荷最小 — 日付/時刻、進行中の目標、生活パラメータ、所持品、
@@ -39,6 +40,7 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
   const questDef = activeQuest ? pack.quests[activeQuest.id] : null;
   const nearbyDef = nearby ? pack.interactables.find((d) => d.id === nearby) : null;
   const items = Object.entries(inventory).filter(([, n]) => n > 0);
+  const touch = isTouchDevice();
 
   // 目標が切り替わったら、右上のパネルを一瞬光らせて「新しい目標」に気づかせる。
   const [questFlash, setQuestFlash] = useState(false);
@@ -207,18 +209,20 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
               fontSize: 14,
             }}
           >
-            <b
-              style={{
-                background: '#e8d59b',
-                color: '#222',
-                borderRadius: 4,
-                padding: '1px 7px',
-                marginRight: 9,
-                fontSize: 12,
-              }}
-            >
-              E
-            </b>
+            {!touch && (
+              <b
+                style={{
+                  background: '#e8d59b',
+                  color: '#222',
+                  borderRadius: 4,
+                  padding: '1px 7px',
+                  marginRight: 9,
+                  fontSize: 12,
+                }}
+              >
+                E
+              </b>
+            )}
             {nearbyDef.prompt}
           </span>
         </div>
@@ -235,7 +239,9 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
           opacity: 0.45,
         }}
       >
-        WASD：移動　ドラッグ：カメラ　E：調べる　J：手帳
+        {touch
+          ? '左半分：移動　右半分：見まわす　近づくと「調べる」'
+          : 'WASD：移動　ドラッグ：カメラ　E：調べる　J：手帳'}
       </div>
     </div>
   );

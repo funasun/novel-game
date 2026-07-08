@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { getGround } from './ground';
 import { obstructed } from './obstacles';
 import { playerPosition } from './playerState';
+import { touchMove } from './touchInput';
 import { Character, Limbs } from './Character';
 import { useGame, isUiLocked } from './store/gameStore';
 
@@ -44,20 +45,28 @@ export function Player() {
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
 
+    // カメラ回転はポインタ移動量で行う。touch では e.movementX/Y が 0 になる端末が多いため、
+    // 直前座標との差分を自前で取る（マウス・タッチ両対応）。指のドラッグでスクロールが
+    // 走らないよう canvas は touch-action:none にする。
     let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
     const el = gl.domElement;
+    el.style.touchAction = 'none';
     const onDown = (e: PointerEvent) => {
       dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
       el.setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
-      cam.current.yaw -= e.movementX * 0.005;
-      cam.current.pitch = THREE.MathUtils.clamp(
-        cam.current.pitch + e.movementY * 0.004,
-        0.12,
-        1.1,
-      );
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      cam.current.yaw -= dx * 0.005;
+      cam.current.pitch = THREE.MathUtils.clamp(cam.current.pitch + dy * 0.004, 0.12, 1.1);
     };
     const onUp = () => (dragging = false);
     el.addEventListener('pointerdown', onDown);
@@ -76,8 +85,11 @@ export function Player() {
     const delta = Math.min(rawDelta, 0.05);
     const locked = isUiLocked(useGame.getState());
     const k = keys.current;
-    const inX = locked ? 0 : (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
-    const inZ = locked ? 0 : (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
+    // キーボード（WASD/矢印）とタッチ（バーチャルジョイスティック）を合成。どちらでも動く。
+    const kx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
+    const kz = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
+    const inX = locked ? 0 : THREE.MathUtils.clamp(kx + touchMove.x, -1, 1);
+    const inZ = locked ? 0 : THREE.MathUtils.clamp(kz + touchMove.y, -1, 1);
     const moving = inX !== 0 || inZ !== 0;
 
     const { yaw, pitch } = cam.current;

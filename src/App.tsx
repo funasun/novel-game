@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { World } from './engine/World';
 import { Player } from './engine/Player';
 import { HUD } from './engine/ui/HUD';
+import { TouchControls } from './engine/ui/TouchControls';
 import { DialogueBox } from './engine/ui/DialogueBox';
 import { NarrationOverlay } from './engine/ui/NarrationOverlay';
 import { LearningToast, Journal } from './engine/learning/LearningLayer';
@@ -71,6 +72,7 @@ export default function App() {
           </World>
           {pack.Overlay && <pack.Overlay />}
           <HUD onHome={() => void goHome()} onRestart={() => void restart()} />
+          <TouchControls />
           <ControlsTutorial />
           <InstallHint />
           <DialogueBox />

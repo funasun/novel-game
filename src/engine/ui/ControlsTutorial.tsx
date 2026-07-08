@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useGame, isUiLocked } from '../store/gameStore';
+import { isTouchDevice } from '../fullscreen';
 
 // Layer 1: はじめての操作案内。開幕の演出が明けて操作可能になったら一度だけ出し、
 // 最初の移動か「とじる」で消える。localStorage に記録して再訪時は出さない。
@@ -11,6 +12,7 @@ const MOVE_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'Arro
 export function ControlsTutorial() {
   const pack = useGame((s) => s.pack);
   const uiLocked = useGame(isUiLocked);
+  const [touch] = useState(() => isTouchDevice());
   const [dismissed, setDismissed] = useState(() => {
     try {
       return localStorage.getItem(SEEN_KEY) === '1';
@@ -36,15 +38,21 @@ export function ControlsTutorial() {
     return () => clearTimeout(t);
   }, [dismissed, uiLocked]);
 
-  // 最初に歩き出したら、そっと閉じる。
+  // 最初に歩き出したら（キーボードは移動キー、タッチは最初の操作で）、そっと閉じる。
   useEffect(() => {
     if (dismissed) return;
     const onKey = (e: KeyboardEvent) => {
       if (MOVE_KEYS.includes(e.code)) close();
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [dismissed, close]);
+    // タッチ端末では移動はジョイスティック（キー入力が無い）ため、世界への最初のタッチで閉じる。
+    const onPointer = () => close();
+    if (touch) window.addEventListener('pointerdown', onPointer);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (touch) window.removeEventListener('pointerdown', onPointer);
+    };
+  }, [dismissed, close, touch]);
 
   if (!pack || dismissed || uiLocked || !ready) return null;
 
@@ -84,10 +92,21 @@ export function ControlsTutorial() {
         >
           あそびかた
         </div>
-        <Row keys="WASD / 矢印">歩く</Row>
-        <Row keys="ドラッグ">まわりを見まわす</Row>
-        <Row keys="E">近づいて人や物を調べる</Row>
-        <Row keys="J">手帳（持ちもの・目標・学び）</Row>
+        {touch ? (
+          <>
+            <Row keys="左半分">ドラッグで歩く</Row>
+            <Row keys="右半分">ドラッグで見まわす</Row>
+            <Row keys="調べる">近づくと出るボタンで調べる</Row>
+            <Row keys="手帳">持ちもの・目標・学び</Row>
+          </>
+        ) : (
+          <>
+            <Row keys="WASD / 矢印">歩く</Row>
+            <Row keys="ドラッグ">まわりを見まわす</Row>
+            <Row keys="E">近づいて人や物を調べる</Row>
+            <Row keys="J">手帳（持ちもの・目標・学び）</Row>
+          </>
+        )}
         <div style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.82, marginTop: 10 }}>
           迷ったら、右上の<b style={{ color: '#f0dca0' }}>「目標」</b>と、
           遠くに立つ<b style={{ color: '#f0dca0' }}>光の柱</b>を目印に進もう。

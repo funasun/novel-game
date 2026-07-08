@@ -18,6 +18,21 @@ export function interactableActive(
   return true;
 }
 
+// 近接対象を実行する。Eキーとタッチの「調べる」ボタンが同じ経路を通る。
+export function triggerInteract(): void {
+  const s = useGame.getState();
+  if (!s.pack || !s.nearby || isUiLocked(s)) return;
+  const def = s.pack.interactables.find((d) => d.id === s.nearby);
+  if (!def) return;
+  if (def.once) {
+    useGame.setState({
+      usedInteractables: { ...s.usedInteractables, [def.id]: true },
+      nearby: null,
+    });
+  }
+  s.applyEffects(def.effects);
+}
+
 export function InteractionSystem() {
   useFrame(() => {
     const s = useGame.getState();
@@ -44,17 +59,7 @@ export function InteractionSystem() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'KeyE') return;
-      const s = useGame.getState();
-      if (!s.pack || !s.nearby || isUiLocked(s)) return;
-      const def = s.pack.interactables.find((d) => d.id === s.nearby);
-      if (!def) return;
-      if (def.once) {
-        useGame.setState({
-          usedInteractables: { ...s.usedInteractables, [def.id]: true },
-          nearby: null,
-        });
-      }
-      s.applyEffects(def.effects);
+      triggerInteract();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
