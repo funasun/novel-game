@@ -1,7 +1,22 @@
 import type { ContentPack } from '../../engine/types';
 import { ElsinoreScene } from './scene/ElsinoreScene';
 import { HamletOverlay } from './scene/HamletOverlay';
-import { SPAWN } from './layout';
+import {
+  SPAWN,
+  SQUARE,
+  MARKET,
+  PIER_ROOT,
+  PIER_END,
+  WILLOW,
+  GARDEN_CENTER,
+  TOWN_POS,
+  BATTLEMENTS,
+  THRONE,
+  GALLERY,
+  CHAPEL,
+  STAGE,
+  GRAVEYARD,
+} from './layout';
 
 // Layer 3: シェイクスピア『ハムレット』を「心の生活ゲーム」として翻案。
 // 生活パラメータは空腹や体力ではなく、憂鬱・疑念・決意——心の天気図。
@@ -30,6 +45,11 @@ export const hamlet: ContentPack = {
 
   items: {
     script: { label: '「ゴンザーゴ殺し」の台本' },
+    flower_rosemary: { label: 'ローズマリー（追憶）' },
+    flower_pansy: { label: '三色すみれ（物思い）' },
+    flower_fennel: { label: 'ういきょう（へつらい）' },
+    flower_rue: { label: 'ヘンルーダ（悔い）' },
+    flower_daisy: { label: 'ひなぎく（偽りなき心）' },
   },
 
   characters: {
@@ -43,6 +63,10 @@ export const hamlet: ContentPack = {
     laertes: { name: 'レアティーズ', note: 'ポローニアスの息子。オフィーリアの兄。' },
     leadPlayer: { name: '旅役者の座長', note: '城を訪れた一座の長。' },
     gravedigger: { name: '墓掘り', note: '軽口をたたきながら墓を掘る男。' },
+    bernardo: { name: 'バナードー', note: '城門の衛兵。亡霊を最初に見た夜警のひとり。' },
+    merchant: { name: '市場の商人', note: '海峡をゆく船の品を商う、城下の顔役。' },
+    hostess: { name: '錨亭の女将', note: '港町の酒場「錨亭」を切り盛りする。地獄耳。' },
+    fisher: { name: '年老いた漁師', note: '海峡を六十年見てきた男。王の名を三代言える。' },
   },
 
   dialogues: {
@@ -237,6 +261,85 @@ export const hamlet: ContentPack = {
       ],
     },
 
+    // ── 城下の噂（サイドクエスト：町の噂あつめ） ──
+    dlg_rumor_guard: {
+      id: 'dlg_rumor_guard',
+      speaker: 'bernardo',
+      lines: [
+        '王子さま、夜歩きはほどほどに。……いえ、亡霊のことじゃありません。いや、それもありますが。',
+        'ノルウェーの若君フォーティンブラスが、国境で兵を集めていると専らの噂で。父君の恨みを晴らす気だと。',
+        'だから城じゃ夜も大砲を鋳て、船大工は日曜も休めない。この国は、眠りながら戦支度をしているんです。',
+      ],
+      effects: {
+        counters: { rumors: 1 },
+        learning: ['l_fortinbras'],
+        params: { doubt: 3 },
+        minutes: 30,
+      },
+    },
+    dlg_rumor_merchant: {
+      id: 'dlg_rumor_merchant',
+      speaker: 'merchant',
+      lines: [
+        'へい王子さま、南蛮の胡椒に琥珀、ライン河の葡萄酒——どれも海峡さまのおかげで。',
+        '海峡を通る船は一艘のこらず、この町で帆を下ろして税を納める。城の大砲が、払わぬ船を沈めますからな。',
+        'ただね……代替わりからこっち、役人の目つきが変わりました。景気の話より、人の口を数えていなさる。',
+      ],
+      effects: {
+        counters: { rumors: 1 },
+        learning: ['l_sound_tax'],
+        params: { doubt: 2 },
+        minutes: 30,
+      },
+    },
+    dlg_rumor_hostess: {
+      id: 'dlg_rumor_hostess',
+      speaker: 'hostess',
+      lines: [
+        'いらっしゃい、王子さま。うちは錨亭。沈む前にみんな一度は寄る店ですよ。',
+        '聞こえますか、城の大砲。新しい王さまは杯を干すたび撃たせるんです。夜通しですよ。樽の酒が濁っちまう。',
+        '古くからの風習だそうですけどね——よその国じゃ、デンマーク人は飲んだくれだと笑われてるって。先の王さまは、あんなに撃たせなかった。',
+      ],
+      effects: {
+        counters: { rumors: 1 },
+        learning: ['l_wassail'],
+        params: { melancholy: 2, doubt: 2 },
+        minutes: 30,
+      },
+    },
+    dlg_rumor_fisher: {
+      id: 'dlg_rumor_fisher',
+      speaker: 'fisher',
+      lines: [
+        '……先の王さまの弔いの晩も、わしはここで網を繕っとりました。海が、妙に静かでな。',
+        '王子さまは不思議に思わんかね。なぜ先王の子でなく、弟君が王冠をかぶったのか。',
+        'この国じゃ、王は生まれるもんじゃない。選ばれるもんです。城の重臣たちが手を挙げりゃ、順番は飛ぶ。……ま、海の上から見りゃ、どの王さまも同じ大きさですがな。',
+      ],
+      effects: {
+        counters: { rumors: 1 },
+        learning: ['l_election'],
+        params: { doubt: 4 },
+        minutes: 30,
+      },
+    },
+
+    // ── 第四幕：庭をさまよう狂乱のオフィーリア ──
+    dlg_mad_ophelia: {
+      id: 'dlg_mad_ophelia',
+      speaker: 'ophelia',
+      lines: [
+        '（歌うように）——それと分かる目印は、貝の帽子と杖。ほんとの恋人は、それと分かる……',
+        'これはローズマリー。追憶の花。ねえ、覚えていてね。それから三色すみれ、物思いの花。',
+        'あなたには、ういきょうと苧環(おだまき)。お妃さまにはヘンルーダ。わたしの分も、すこしだけ。',
+        'すみれの花はあげられないの。父さまが死んだ日に、みんな枯れてしまったから。',
+        '（ふっと目の焦点が合い、また遠くなる）……お墓に、雪は降るかしら。',
+      ],
+      effects: {
+        learning: ['l_ophelia_flowers'],
+        params: { melancholy: 8 },
+      },
+    },
+
     // ── 第五幕：墓地 ──
     dlg_grave_1: {
       id: 'dlg_grave_1',
@@ -362,6 +465,42 @@ export const hamlet: ContentPack = {
       waypoint: [0, 6],
       goal: { type: 'flag', flag: 'duel_start' },
     },
+
+    // ── よりみち（城下の暮らし） ──
+    sq_rumors: {
+      id: 'sq_rumors',
+      title: '町の噂あつめ',
+      description:
+        '城下の四人——門の衛兵・市場の商人・錨亭の女将・港の漁師——の話に耳を傾ける。噂の切れ端が、デンマークの輪郭を描く。',
+      waypoint: SQUARE,
+      goal: { type: 'counter', counter: 'rumors', count: 4 },
+      side: true,
+    },
+    sq_quotes: {
+      id: 'sq_quotes',
+      title: '台詞の欠片',
+      description:
+        '城の内外のどこかで、七枚の紙片が光っている。拾えば、この悲劇に刻まれた言葉が手帳に残る。',
+      waypoint: [3, -28],
+      goal: { type: 'counter', counter: 'quotes', count: 7 },
+      side: true,
+    },
+    sq_flowers: {
+      id: 'sq_flowers',
+      title: 'オフィーリアの花冠',
+      description:
+        '彼女が配るはずだった五つの花——ローズマリー・三色すみれ・ういきょう・ヘンルーダ・ひなぎく——を摘み集める。集めきったら、小川の柳のもとへ。',
+      waypoint: WILLOW,
+      goal: { type: 'counter', counter: 'flowers', count: 5 },
+      side: true,
+    },
+    sq_walk: {
+      id: 'sq_walk',
+      title: 'エルシノアを歩き尽くす',
+      description: '城と城下のすみずみまで足を運び、十二の場所を見つける。地図は手帳に描かれていく。',
+      goal: { type: 'counter', counter: 'landmarks_found', count: 12 },
+      side: true,
+    },
   },
 
   events: [
@@ -387,8 +526,8 @@ export const hamlet: ContentPack = {
           effects: {
             flags: ['oath'],
             params: { resolve: 30, doubt: 35, melancholy: 10 },
-            learning: ['l_ghost', 'l_denmark'],
-            questAdd: ['q_madness'],
+            learning: ['l_ghost', 'l_denmark', 'l_town'],
+            questAdd: ['q_madness', 'sq_rumors', 'sq_quotes', 'sq_walk'],
           },
         },
         {
@@ -397,6 +536,8 @@ export const hamlet: ContentPack = {
             '東の空が、うっすら白みはじめる。亡霊は消えた。',
             '胸に残るのは、ただ一つの誓い。',
             '——狂気を装おう。悟られぬために。この城のすべての目を、欺いて。',
+            '南の大門はひらいている。門の外には城下の町、市場と酒場、港と、オフィーリアの庭。',
+            '（心が重いときは、町を歩き、人と話し、剣を振るい、祈るがいい。憂鬱も疑念も決意も——動かせる）',
           ],
         },
       ],
@@ -479,7 +620,106 @@ export const hamlet: ContentPack = {
           lines: ['父を、恋人ハムレットの手にかけられ——', 'オフィーリアは、正気の糸を手放した。', '花を摘み、歌を口ずさみ、水辺をさまよって。'],
         },
         { type: 'dialogue', id: 'dlg_willow' },
-        { type: 'effects', effects: { params: { melancholy: 25, resolve: 8 }, learning: ['l_ophelia'], questAdd: ['q_grave'] } },
+        {
+          type: 'effects',
+          effects: {
+            params: { melancholy: 25, resolve: 8 },
+            learning: ['l_ophelia'],
+            questAdd: ['q_grave', 'sq_flowers'],
+          },
+        },
+        {
+          type: 'narration',
+          lines: [
+            '西の庭の小川に、あの柳はいまも立っている。',
+            '彼女が配るはずだった花は、庭のそこかしこに咲いたままだ。',
+            '（五つの花を摘み、柳のもとへ——せめて、花冠を編んで）',
+          ],
+        },
+      ],
+    },
+
+    // よりみち：噂がそろう
+    {
+      id: 'ev_rumors',
+      trigger: { type: 'questComplete', quest: 'sq_rumors' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '衛兵の戦支度。商人の税。女将の砲声。漁師の「選ばれる王」。',
+            '四つの噂が重なって、デンマークという国の輪郭が見えてくる。',
+            '腐っているのは城の奥だ。それでも町の人々は、今日も竈に火を入れる。',
+            'その当たり前の営みが、いまのハムレットには、まぶしい。',
+          ],
+        },
+        { type: 'effects', effects: { params: { doubt: -6, resolve: 5, melancholy: -4 } } },
+      ],
+    },
+
+    // よりみち：台詞の欠片がそろう
+    {
+      id: 'ev_quotes',
+      trigger: { type: 'questComplete', quest: 'sq_quotes' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '七枚の紙片が、手帳のなかで一つにつながる。',
+            '牢獄も、鏡も、雀の摂理も——言葉はハムレットのただ一つの武器であり、逃げ場であり、灯りだ。',
+            '言葉を集め終えたとき、少しだけ、夜が軽くなった。',
+          ],
+        },
+        { type: 'effects', effects: { params: { melancholy: -8, resolve: 5 } } },
+      ],
+    },
+
+    // よりみち：エルシノア踏破
+    {
+      id: 'ev_walk',
+      trigger: { type: 'questComplete', quest: 'sq_walk' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '胸壁から桟橋まで、礼拝堂から酒場まで。足の裏が、エルシノアの全部を覚えた。',
+            'この場所のすべてが舞台で、すべての人が役者だ。',
+            'そして舞台を知り尽くした役者は、もう出番を恐れない。',
+          ],
+        },
+        { type: 'effects', effects: { params: { resolve: 6, melancholy: -4 } } },
+      ],
+    },
+
+    // よりみち：花冠を柳に供える
+    {
+      id: 'ev_wreath',
+      trigger: { type: 'questComplete', quest: 'sq_flowers' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '五つの花を、震える指で編む。追憶に、物思い。へつらいと、悔いと、偽りなき心。',
+            '小川の柳の、彼女が登ったあの枝に、そっと花冠を掛けた。',
+            '水面が、白い葉裏を映して揺れる。歌声は、もう聞こえない。',
+            '——さようなら、オフィーリア。きみの花は、おれが覚えている。',
+          ],
+        },
+        {
+          type: 'effects',
+          effects: {
+            flags: ['wreath_done'],
+            items: {
+              flower_rosemary: -1,
+              flower_pansy: -1,
+              flower_fennel: -1,
+              flower_rue: -1,
+              flower_daisy: -1,
+            },
+            params: { melancholy: -14, resolve: 6 },
+            learning: ['l_flowers'],
+          },
+        },
       ],
     },
 
@@ -588,6 +828,90 @@ export const hamlet: ContentPack = {
       body: '毒の剣と毒の杯によって、王妃・レアティーズ・クローディアス、そしてハムレットが相次いで斃れる。「あとは——沈黙だ」と言い残してハムレットは息絶える。友ホレイショーだけが生き残り、この物語を後世へ語り継ぐ。',
       tags: ['結末', '名台詞'],
     },
+
+    // ── 城下の学び ──
+    l_town: {
+      id: 'l_town',
+      title: '城下の町ヘルシンゲア',
+      body: 'クロンボー城の足もとには、海峡交易で栄えた港町ヘルシンゲア（英名エルシノア）が広がっていた。対岸のスウェーデンまでわずか4km。船乗り、商人、職人が行き交うこの町の活気は、石壁の中の陰鬱な宮廷と好対照をなす。',
+      tags: ['史実', '舞台'],
+    },
+    l_sound_tax: {
+      id: 'l_sound_tax',
+      title: '海峡通行税',
+      body: 'デンマーク王はエーレスンド海峡を通るすべての船から通行税を取り立てた。装いを改めたクロンボー城の大砲は、その「関所」の実力装置。この税は約400年ものあいだ王国の財布を潤し、エルシノアの繁栄を支えた。',
+      tags: ['史実', '経済'],
+    },
+    l_wassail: {
+      id: 'l_wassail',
+      title: '王の酒宴と大砲',
+      body: 'クローディアスは杯を干すたび祝砲を撃たせる。ハムレットはこの風習を「守るより破るほうが名誉」と苦々しく評した。飲めや歌えの宮廷と、喪服のままの王子——酒宴の砲声は、ふたつの心の距離をそのまま音にしている。',
+      tags: ['場面', '風習'],
+    },
+    l_election: {
+      id: 'l_election',
+      title: 'デンマークの選挙王制',
+      body: '当時のデンマークの王は世襲ではなく、重臣会議が選ぶものだった。だから先王の子ハムレットではなく、弟クローディアスが王冠をかぶれた。ハムレット自身も終幕で「王の選出とおれの望みのあいだに、あの男が割り込んだ」と口にする。',
+      tags: ['史実', '政治'],
+    },
+
+    // ── 台詞の欠片（七つの名台詞コレクション） ──
+    l_q_joint: {
+      id: 'l_q_joint',
+      title: '「世の関節は、外れてしまった」',
+      body: '亡霊に復讐を課された第一幕の結び。時代そのものが脱臼している——そしてそれを直す役目が、よりにもよって自分に落ちてきた、という呪いの言葉。個人の悲しみが、世界の病の自覚へと広がる瞬間である。',
+      tags: ['名台詞', '欠片'],
+    },
+    l_q_frailty: {
+      id: 'l_q_frailty',
+      title: '「弱き者よ、汝の名は女」',
+      body: '父の死からひと月足らずで叔父と再婚した母への、最初の独白の嘆き。母ひとりへの失望が「女」全体への呪詛にすり替わるこの飛躍にこそ、若いハムレットの傷の深さと危うさが表れている。',
+      tags: ['名台詞', '欠片'],
+    },
+    l_q_brevity: {
+      id: 'l_q_brevity',
+      title: '「簡潔は知恵の魂」',
+      body: '口数の多い侍従長ポローニアスが、よりにもよって「手短に申し上げますと」と前置きしながら延々と語りだす場面の一句。シェイクスピアは、正しいことを言う滑稽な人物を通して、賢しらな言葉の空回りを笑ってみせる。',
+      tags: ['名台詞', '欠片'],
+    },
+    l_q_prison: {
+      id: 'l_q_prison',
+      title: '「デンマークは牢獄だ」',
+      body: '旧友との再会で漏らす本音。「世界がひとつの牢獄なら、デンマークはその中でも上等な独房だ」。続けて言う——「物事に善悪はない、考えがそれを決める」。心の持ちようが世界を牢にも宮殿にも変える、という近代的な認識。',
+      tags: ['名台詞', '欠片'],
+    },
+    l_q_mirror: {
+      id: 'l_q_mirror',
+      title: '「芝居とは、自然にかかげる鏡」',
+      body: '旅役者への演技指導で語られる演劇論。わめくな、誇張するな、時代の姿をありのままに映せ。劇中劇で王の罪を暴こうとするハムレットにとって、この「鏡」の理論は復讐の実践理論でもある。',
+      tags: ['名台詞', '欠片'],
+    },
+    l_q_sparrow: {
+      id: 'l_q_sparrow',
+      title: '「一羽の雀が落ちるにも、天の摂理がある」',
+      body: '果たし合いを前に、胸騒ぎを案じるホレイショーへ返した静かな言葉。来るものは来る。今でなければ、いずれ。逡巡を重ねたハムレットが最後にたどり着いた、覚悟という名の安らぎである。',
+      tags: ['名台詞', '欠片'],
+    },
+    l_q_true: {
+      id: 'l_q_true',
+      title: '「おのれ自身に、誠実であれ」',
+      body: 'フランスへ船出する息子レアティーズへ、ポローニアスが贈った処世訓の結び。「夜が昼に続くように、そうすれば人を欺くこともない」。おせっかいな老臣が遺した言葉のなかで、これだけは真っ直ぐに光る。',
+      tags: ['名台詞', '欠片'],
+    },
+
+    // ── オフィーリアの花 ──
+    l_ophelia_flowers: {
+      id: 'l_ophelia_flowers',
+      title: '花のことば——狂乱の場',
+      body: '正気を手放したオフィーリアは、宮廷の人々に花を配って歩く。ローズマリーは追憶、パンジーは物思い、ういきょうはへつらい、ヘンルーダは悔恨。そして「すみれは父が死んだ日に枯れた」。花言葉だけで宮廷の罪を言い当てる、劇中もっとも哀しい告発である。',
+      tags: ['場面', '花言葉'],
+    },
+    l_flowers: {
+      id: 'l_flowers',
+      title: '柳の花冠',
+      body: 'オフィーリアは柳の枝に花冠を掛けようとして流れに落ちた。彼女に届かなかった花を編み、同じ枝に供える——それは原作にはない、この庭だけの小さな弔いだ。悲劇は変えられない。それでも花を摘む手は、生きている者の仕事である。',
+      tags: ['追悼', '花言葉'],
+    },
   },
 
   interactables: [
@@ -651,5 +975,308 @@ export const hamlet: ContentPack = {
       once: true,
       effects: { dialogue: 'dlg_duel_challenge' },
     },
+
+    // ═══ 城下の噂（sq_rumors）——四人と話す ═══
+    {
+      id: 'talk_guard',
+      position: TOWN_POS.bernardo,
+      prompt: '衛兵バナードーの夜語りを聞く',
+      radius: 3,
+      once: true,
+      effects: { dialogue: 'dlg_rumor_guard' },
+    },
+    {
+      id: 'talk_merchant',
+      position: TOWN_POS.merchant,
+      prompt: '市場の商人をひやかす',
+      radius: 3,
+      once: true,
+      effects: { dialogue: 'dlg_rumor_merchant' },
+    },
+    {
+      id: 'talk_hostess',
+      position: TOWN_POS.hostess,
+      prompt: '錨亭の女将と言葉を交わす',
+      radius: 3,
+      once: true,
+      effects: { dialogue: 'dlg_rumor_hostess' },
+    },
+    {
+      id: 'talk_fisher',
+      position: TOWN_POS.fisher,
+      prompt: '年老いた漁師の話を聞く',
+      radius: 3,
+      once: true,
+      effects: { dialogue: 'dlg_rumor_fisher' },
+    },
+
+    // ═══ 光る紙片＝名台詞の欠片（sq_quotes）——七枚 ═══
+    {
+      id: 'quote_joint',
+      position: [3, -28],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_joint',
+      effects: {
+        flags: ['paper_joint'],
+        counters: { quotes: 1 },
+        learning: ['l_q_joint'],
+        params: { resolve: 1 },
+      },
+    },
+    {
+      id: 'quote_frailty',
+      position: [-28, 12],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_frailty',
+      effects: {
+        flags: ['paper_frailty'],
+        counters: { quotes: 1 },
+        learning: ['l_q_frailty'],
+        params: { resolve: 1 },
+      },
+    },
+    {
+      id: 'quote_brevity',
+      position: [8.5, -10],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_brevity',
+      effects: {
+        flags: ['paper_brevity'],
+        counters: { quotes: 1 },
+        learning: ['l_q_brevity'],
+        params: { resolve: 1 },
+      },
+    },
+    {
+      id: 'quote_prison',
+      position: [0, 39.5],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_prison',
+      effects: {
+        flags: ['paper_prison'],
+        counters: { quotes: 1 },
+        learning: ['l_q_prison'],
+        params: { resolve: 1 },
+      },
+    },
+    {
+      id: 'quote_mirror',
+      position: [25.5, 0.5],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_mirror',
+      effects: {
+        flags: ['paper_mirror'],
+        counters: { quotes: 1 },
+        learning: ['l_q_mirror'],
+        params: { resolve: 1 },
+      },
+    },
+    {
+      id: 'quote_sparrow',
+      position: [-44.5, 55.8],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_sparrow',
+      effects: {
+        flags: ['paper_sparrow'],
+        counters: { quotes: 1 },
+        learning: ['l_q_sparrow'],
+        params: { resolve: 1 },
+      },
+    },
+    {
+      id: 'quote_true',
+      position: [39, 105],
+      prompt: '光る紙片を拾う',
+      radius: 2.6,
+      once: true,
+      hideFlag: 'paper_true',
+      effects: {
+        flags: ['paper_true'],
+        counters: { quotes: 1 },
+        learning: ['l_q_true'],
+        params: { resolve: 1 },
+      },
+    },
+
+    // ═══ 心の管理——くり返せる営み（cooldownHours） ═══
+    {
+      id: 'act_fence',
+      position: [10, 28.2],
+      prompt: '稽古の的に剣を振るう',
+      radius: 2.8,
+      cooldownHours: 6,
+      effects: {
+        params: { resolve: 6, melancholy: -2 },
+        minutes: 60,
+      },
+    },
+    {
+      id: 'act_horatio',
+      position: [5.5, 16.5],
+      prompt: 'ホレイショーと語らう',
+      radius: 3,
+      cooldownHours: 8,
+      effects: {
+        params: { melancholy: -8, doubt: -3 },
+        minutes: 60,
+      },
+    },
+    {
+      id: 'act_chapel',
+      position: [-24, -17],
+      prompt: '礼拝堂で静かに祈る',
+      radius: 3,
+      cooldownHours: 10,
+      effects: {
+        params: { melancholy: -5, resolve: 2 },
+        minutes: 45,
+      },
+    },
+    {
+      id: 'act_tavern',
+      position: [-9.7, 67.5],
+      prompt: '錨亭で温い麦酒を一杯',
+      radius: 3,
+      cooldownHours: 12,
+      effects: {
+        params: { melancholy: -9, doubt: 5, suspicion: 2 },
+        minutes: 90,
+      },
+    },
+    {
+      id: 'act_read',
+      position: [-28.3, 2.4],
+      prompt: '腰掛けで書物をひらく（言葉、言葉、言葉）',
+      radius: 2.8,
+      cooldownHours: 8,
+      effects: {
+        params: { doubt: -6, melancholy: 2 },
+        minutes: 60,
+      },
+    },
+    {
+      id: 'act_sea',
+      position: [39, 103.5],
+      prompt: '桟橋の先で海峡の風に吹かれる',
+      radius: 3,
+      cooldownHours: 10,
+      effects: {
+        params: { melancholy: -5, resolve: 2 },
+        minutes: 45,
+      },
+    },
+
+    // ═══ オフィーリアの花（sq_flowers）——第四幕以降 ═══
+    {
+      id: 'pick_rosemary',
+      position: [-38, 50],
+      prompt: 'ローズマリーを摘む——それは追憶',
+      radius: 2.6,
+      requiresFlag: 'polonius_dead',
+      once: true,
+      effects: {
+        items: { flower_rosemary: 1 },
+        counters: { flowers: 1 },
+        params: { melancholy: -2 },
+      },
+    },
+    {
+      id: 'pick_pansy',
+      position: [-33, 64],
+      prompt: 'パンジーを摘む——それは物思い',
+      radius: 2.6,
+      requiresFlag: 'polonius_dead',
+      once: true,
+      effects: {
+        items: { flower_pansy: 1 },
+        counters: { flowers: 1 },
+        params: { melancholy: -2 },
+      },
+    },
+    {
+      id: 'pick_fennel',
+      position: [-45, 68],
+      prompt: 'ういきょうを摘む——それはへつらい',
+      radius: 2.6,
+      requiresFlag: 'polonius_dead',
+      once: true,
+      effects: {
+        items: { flower_fennel: 1 },
+        counters: { flowers: 1 },
+        params: { melancholy: -2 },
+      },
+    },
+    {
+      id: 'pick_rue',
+      position: [-54.5, 52],
+      prompt: 'ヘンルーダを摘む——それは悔恨',
+      radius: 2.6,
+      requiresFlag: 'polonius_dead',
+      once: true,
+      effects: {
+        items: { flower_rue: 1 },
+        counters: { flowers: 1 },
+        params: { melancholy: -2 },
+      },
+    },
+    {
+      id: 'pick_daisy',
+      position: [-15.5, 26.5],
+      prompt: 'ひなぎくを摘む——それは偽りの愛',
+      radius: 2.6,
+      requiresFlag: 'polonius_dead',
+      once: true,
+      effects: {
+        items: { flower_daisy: 1 },
+        counters: { flowers: 1 },
+        params: { melancholy: -2 },
+      },
+    },
+
+    // 狂乱のオフィーリア——庭で歌う（第四幕のあいだだけ）
+    {
+      id: 'ophelia_song',
+      position: TOWN_POS.madOphelia,
+      prompt: '柳のほとりで歌うオフィーリアに、そっと近づく',
+      radius: 3.2,
+      requiresFlag: 'polonius_dead',
+      hideFlag: 'yorick',
+      once: true,
+      effects: { dialogue: 'dlg_mad_ophelia' },
+    },
   ],
+
+  // 名所。見つけると手帳に刻まれる（sq_walk: landmarks_found）。
+  landmarks: [
+    { id: 'lm_gate', label: '南の大門', position: [0, 35], radius: 7 },
+    { id: 'lm_street', label: '城下の大通り', position: [0, 47], radius: 7 },
+    { id: 'lm_square', label: '広場の井戸', position: SQUARE, radius: 8 },
+    { id: 'lm_tavern', label: '酒場「錨亭」', position: [-9, 66], radius: 6 },
+    { id: 'lm_market', label: '市場の露店', position: MARKET, radius: 6 },
+    { id: 'lm_harbor', label: '港の桟橋', position: PIER_ROOT, radius: 8 },
+    { id: 'lm_pier_end', label: '桟橋の先端', position: PIER_END, radius: 5 },
+    { id: 'lm_garden', label: 'オフィーリアの庭', position: GARDEN_CENTER, radius: 9 },
+    { id: 'lm_willow', label: '小川の柳', position: WILLOW, radius: 5.5 },
+    { id: 'lm_battle', label: '北の胸壁', position: BATTLEMENTS, radius: 7 },
+    { id: 'lm_throne', label: '玉座の間', position: THRONE, radius: 6 },
+    { id: 'lm_gallery', label: '西の回廊', position: GALLERY, radius: 6 },
+    { id: 'lm_chapel', label: '礼拝堂の祭壇', position: CHAPEL, radius: 5.5 },
+    { id: 'lm_stage', label: '旅役者の舞台', position: STAGE, radius: 6 },
+    { id: 'lm_grave', label: '墓地', position: GRAVEYARD, radius: 6 },
+  ],
+
+  // 地図の描画範囲（城＋城下＋庭＋港・桟橋）。
+  mapBounds: [-60, -44, 60, 110],
 };

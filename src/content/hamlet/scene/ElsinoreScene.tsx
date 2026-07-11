@@ -19,6 +19,7 @@ import {
   CLOSET,
   THRONE,
 } from '../layout';
+import { TownDistrict } from './TownDistrict';
 
 // Layer 3: ハムレットの舞台「エルシノア城（クロンボー城）」の中庭。
 // 石壁・四隅の塔・松明・玉座・旅役者の舞台・回廊・礼拝堂・墓地——すべてプロシージャル生成。
@@ -31,15 +32,16 @@ export function ElsinoreScene() {
 
   return (
     <group>
-      {/* エルシノアの月あかり。物語は常に深夜1時＝城は明けない夜のなか。
-          World の淡い月光に、青く沈んだ補助光を重ね、石壁と塔の陰翳を立ち上がらせる。
-          あくまで夜。ただし城の造作は見て取れる——ハムレットの陰鬱と両立する明度に。 */}
+      {/* エルシノアの月あかり。物語は真夜中に始まり、暮らしの営みとともに日が巡る。
+          World の昼夜に、青く沈んだ補助光を重ね、石壁と塔の陰翳を立ち上がらせる。
+          夜は松明と城下の提灯が生き、昼は海峡の光が射す——ハムレットの陰鬱と両立する明度に。 */}
       <ambientLight intensity={0.42} color="#46527a" />
       <directionalLight position={[34, 54, 26]} intensity={0.4} color="#9fb4ff" />
       <CastleShell />
       <Torches />
       <People />
       <Foils />
+      <TownDistrict />
     </group>
   );
 }
