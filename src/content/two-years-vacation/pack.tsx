@@ -28,6 +28,29 @@ import {
   DRIFTWOOD_POINTS,
   SHELLFISH_POINTS,
   FIREWOOD_POINTS,
+  LAKE,
+  BRIDGE,
+  FORD,
+  KNOLL,
+  EAST_CAPE,
+  NORTH_CAPE,
+  SOUTH_BEACH,
+  WEST_CAPE,
+  WRECK_EAST,
+  TURTLE_SOUTH,
+  CAIRN_WEST,
+  TOWER_SITE,
+  SMOKE_SITE,
+  PIER_SITE,
+  BERRY_SPOTS,
+  STONE_SPOTS,
+  REED_SPOTS,
+  CLAY_SPOTS,
+  EGG_SPOTS,
+  HERB_SPOTS,
+  FISH_SPOTS,
+  WOOD_GROVES,
+  BATHE_ROCK,
 } from './layout';
 
 // Layer 3: 十五少年漂流記 — コンテンツパック。
@@ -66,6 +89,75 @@ const firewood: InteractableDef[] = FIREWOOD_POINTS.map((p, i) => ({
   requiresFlag: 'cave_moved',
 }));
 
+// ===== 再取得できる資源ポイント（cooldownHours で復活する採集地） =====
+const resourceNode = (
+  idPrefix: string,
+  spots: [number, number][],
+  prompt: string,
+  item: string,
+  cooldownHours: number,
+  opts: {
+    requiresFlag?: string;
+    learning?: string;
+    minutes?: number;
+    stamina?: number;
+    amount?: number;
+  } = {},
+): InteractableDef[] =>
+  spots.map(([x, z], i) => ({
+    id: `${idPrefix}_${i}`,
+    position: [x, z] as [number, number],
+    prompt,
+    radius: 3,
+    cooldownHours,
+    requiresFlag: opts.requiresFlag ?? 'cave_moved',
+    effects: {
+      items: { [item]: opts.amount ?? 1 },
+      params: { stamina: opts.stamina ?? -2 },
+      minutes: opts.minutes ?? 20,
+      ...(opts.learning ? { learning: [opts.learning] } : {}),
+    },
+  }));
+
+const resources: InteractableDef[] = [
+  ...resourceNode('res_berry', BERRY_SPOTS, '森の実を摘む', 'berry', 6, {
+    amount: 2,
+    learning: 'l_berry',
+  }),
+  ...resourceNode('res_stone', STONE_SPOTS, '岩から石材を切り出す', 'stone', 8, {
+    amount: 2,
+    stamina: -5,
+    minutes: 40,
+    learning: 'l_stone',
+  }),
+  ...resourceNode('res_reed', REED_SPOTS, '川辺の葦を刈る', 'reed', 6, {
+    amount: 2,
+    learning: 'l_reed',
+  }),
+  ...resourceNode('res_clay', CLAY_SPOTS, '川の粘土を掘る', 'clay', 8, {
+    stamina: -3,
+    minutes: 30,
+    learning: 'l_clay',
+  }),
+  ...resourceNode('res_egg', EGG_SPOTS, '海鳥の巣から卵をひとつもらう', 'egg', 12, {
+    learning: 'l_egg',
+  }),
+  ...resourceNode('res_herb', HERB_SPOTS, '湿原の薬草を摘む', 'herb', 10, {
+    learning: 'l_herb',
+  }),
+  ...resourceNode('res_wood', WOOD_GROVES, '倒木から薪を割り出す', 'wood', 8, {
+    amount: 2,
+    stamina: -4,
+    minutes: 30,
+  }),
+  ...resourceNode('res_fish', FISH_SPOTS, '釣り糸を垂れる', 'fish', 4, {
+    requiresFlag: 'rod_made',
+    minutes: 60,
+    stamina: -1,
+    learning: 'l_freshfish',
+  }),
+];
+
 export const twoYearsVacation: ContentPack = {
   id: 'two-years-vacation',
   title: '十五少年漂流記',
@@ -85,6 +177,14 @@ export const twoYearsVacation: ContentPack = {
 
   items: {
     wood: { label: '薪・流木' },
+    fish: { label: '魚' },
+    berry: { label: '森の実' },
+    stone: { label: '石材' },
+    reed: { label: '葦' },
+    clay: { label: '粘土' },
+    egg: { label: '海鳥の卵' },
+    herb: { label: '薬草' },
+    rope: { label: 'ロープ' },
   },
 
   characters: {
@@ -765,6 +865,33 @@ export const twoYearsVacation: ContentPack = {
       waypoint: [4, 86],
       goal: { type: 'flag', flag: 'departed' },
     },
+    // ===== よりみち（サイドクエスト）：島の暮らしを深める =====
+    sq_build: {
+      id: 'sq_build',
+      title: '開拓の三事業',
+      description:
+        '物見やぐら・燻製小屋・桟橋——手帳の「つくる」から、三つの建設をやりとげる',
+      waypoint: TOWER_SITE,
+      goal: { type: 'counter', counter: 'buildings', count: 3 },
+      side: true,
+    },
+    sq_cook: {
+      id: 'sq_cook',
+      title: 'モコの料理帖',
+      description: '素材を集めて、新しい料理を三品つくる（手帳の「つくる」）',
+      waypoint: KITCHEN,
+      goal: { type: 'counter', counter: 'dishes_cooked', count: 3 },
+      side: true,
+    },
+    sq_explore: {
+      id: 'sq_explore',
+      title: '島のすみずみまで',
+      description:
+        '岬・湖・橋——地図に載る場所を12か所見つける（手帳の「地図」で確かめられる）',
+      waypoint: EAST_CAPE,
+      goal: { type: 'counter', counter: 'landmarks_found', count: 12 },
+      side: true,
+    },
   },
 
   events: [
@@ -865,6 +992,70 @@ export const twoYearsVacation: ContentPack = {
           ],
         },
         { type: 'dialogue', id: 'dlg_settle' },
+      ],
+    },
+    {
+      // 大引っ越しの直後：世界が「遊び場」として開く（ev_move に続けて流れる）
+      id: 'ev_sandbox',
+      trigger: { type: 'flag', flag: 'cave_moved' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            'フレンチ・デンに暮らしはじめると、島は前よりずっと大きく見えた。',
+            '湖のほとり、川の岸辺、名も知らぬ遠い岬——歩いていける世界のすべてが、仕事場で、遊び場だ。',
+            '（手帳に「地図」と「つくる」のページが増えた。実・石・葦・粘土を集めれば、道具や料理、建物まで作れる。川には丸木橋、河口には歩いて渡れる浅瀬がある。遠くの岬には、何かが流れ着いているといううわさ……）',
+          ],
+        },
+        {
+          type: 'effects',
+          effects: { questAdd: ['sq_build', 'sq_cook', 'sq_explore'] },
+        },
+      ],
+    },
+    {
+      id: 'ev_tower',
+      trigger: { type: 'flag', flag: 'tower_built' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '丸太を組み、ロープで縛り、三日がかりで——大凧の丘の頂に、物見やぐらが立った。',
+            '手すりにつかまって見渡せば、島じゅうが一望できる。海の色、森のうねり、川の銀の帯。',
+            'ドニファンが望遠鏡を片手に言った。「見張りは任せろ。水平線に帆が見えたら、真っ先に知らせてやる」',
+          ],
+        },
+        { type: 'effects', effects: { learning: ['l_tower'], params: { morale: 6 } } },
+      ],
+    },
+    {
+      id: 'ev_smokehouse',
+      trigger: { type: 'flag', flag: 'smokehouse_built' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '石を積み、粘土で目地を埋め、屋根を葺いて——燻製小屋ができあがった。',
+            '煙突から細い煙が立ちのぼる。モコが火加減を見ながら、誇らしげに胸を張った。',
+            '「これで魚も肉も、冬までもちます。飢えの心配が、ひとつ減りました」',
+          ],
+        },
+        { type: 'effects', effects: { learning: ['l_smoke'], params: { morale: 5 } } },
+      ],
+    },
+    {
+      id: 'ev_pier',
+      trigger: { type: 'flag', flag: 'pier_built' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '杭を打ち、板を渡し——スルギ湾に小さな桟橋が伸びた。',
+            '波の上に立てば、足もとを魚の群れが銀色に走る。ここは島いちばんの釣り場になるだろう。',
+            '年少組は日が暮れるまで、桟橋のたもとで足をぶらぶらさせていた。',
+          ],
+        },
+        { type: 'effects', effects: { learning: ['l_pier'], params: { morale: 5 } } },
       ],
     },
     {
@@ -1315,12 +1506,192 @@ export const twoYearsVacation: ContentPack = {
         '漂流二年目の新年、少年たちはごちそうを並べ、歌い、競技会まで開いた。明日の命も知れない島で、なぜ祝うのか。祝祭は「私たちはまだ文明人だ」という宣言であり、暦を守ることは帰る日への糸を手放さないことだからだ。',
       tags: ['心', '社会'],
     },
+    // ===== 世界拡張：採集・クラフト・発見の学び =====
+    l_berry: {
+      id: 'l_berry',
+      title: '知らない実は口にしない',
+      body:
+        '色あざやかな木の実ほど、毒を持つことがある。原作の少年たちは、博物学に詳しいゴードンと『ロビンソン・クルーソー』愛読者のサーヴィスが「知っている実」だけを選んだ。鳥がついばむ実は目安にはなるが、絶対ではない——疑わしきは食べない。これが野外の鉄則だ。',
+      tags: ['食', 'サバイバル'],
+    },
+    l_stone: {
+      id: 'l_stone',
+      title: '石は最初の道具',
+      body:
+        '炉のふち、かまどの土台、建物の基礎——石は火にも雨にも負けない万能の建材だ。人類最初の道具も打ち欠いた石だった。よい石材は、節理（割れ目）に沿って楔を打てば思いのほか素直に割れる。力ではなく、石の目を読むのが石工の腕だ。',
+      tags: ['技術', 'サバイバル'],
+    },
+    l_reed: {
+      id: 'l_reed',
+      title: '葦は水辺の贈りもの',
+      body:
+        '茎はまっすぐで軽く、中が空洞——葦は釣り竿にも、屋根葺きにも、編めばかごや縄にもなる。古代エジプトでは筆やパピルス紙まで葦から作られた。「人間は考える葦である」という言葉のとおり、細くても束ねれば強い。',
+      tags: ['技術', '歴史'],
+    },
+    l_clay: {
+      id: 'l_clay',
+      title: '川が運ぶ粘土',
+      body:
+        '川の流れがゆるむ場所には、細かい土の粒が沈んでたまる。これが粘土だ。水を含めば自在に形を変え、火で焼けば石のように固くなる——土器の発明は、人類が「煮る」料理を手に入れた瞬間だった。スープも保存も、すべてはこの茶色い土から始まった。',
+      tags: ['技術', '歴史'],
+    },
+    l_egg: {
+      id: 'l_egg',
+      title: '巣から全部は取らない',
+      body:
+        '海鳥の卵は貴重なたんぱく源だが、原作の少年たちも巣を空にはしなかった。全部取れば来年の鳥がいなくなる——「資源は利子だけを使い、元本に手をつけない」。これは現代の持続可能性の考え方そのもので、狩猟採集の民が何千年も守ってきた知恵でもある。',
+      tags: ['自然', 'サバイバル'],
+    },
+    l_herb: {
+      id: 'l_herb',
+      title: '湿原の薬草',
+      body:
+        '薬局のない島では、草が薬だ。傷にはオオバコ、熱には柳の皮（アスピリンのもとになったサリシンを含む）、腹痛には苦い草の煎じ汁——19世紀の船乗りは、船医がいなければ本と経験を頼りに草を煎じた。ただし薬と毒は紙一重。量を間違えれば薬も毒になる。',
+      tags: ['自然', 'サバイバル'],
+    },
+    l_fishing: {
+      id: 'l_fishing',
+      title: '釣り竿づくり',
+      body:
+        '竿は葦、糸はほどいた帆布の繊維、針は曲げた留め金——船の残骸と川辺の草だけで、釣り道具は一式そろう。原作でも少年たちは湖と川に糸を垂れ、食卓を支えた。道具を「買う」のではなく「作る」ところから始まる釣りは、獲物への感謝もひとしおだ。',
+      tags: ['技術', '食'],
+    },
+    l_freshfish: {
+      id: 'l_freshfish',
+      title: '湖と川の魚',
+      body:
+        'ファミリー湖にはマスに似た魚が群れ、ジーランド川には産卵で遡上する魚が走る。海の魚と違って淡水の魚は寄生虫を持つことがあり、必ず火を通すのが鉄則。焼くか、燻すか、スープにするか——それを考えるのも釣りの楽しみのうちだ。',
+      tags: ['食', '自然'],
+    },
+    l_pottery: {
+      id: 'l_pottery',
+      title: '土器を焼く',
+      body:
+        'こねた粘土をよく乾かし、焚き火の中でじっくり焼くと、粘土の粒が焼き締まって水を通さなくなる。窯のない野焼きは温度が上がりにくく、割れやすい——だから厚めに、ゆっくり冷ますのがコツ。人類最古の土器はおよそ二万年前。少年たちの鍋は、その長い列の末席にいる。',
+      tags: ['技術', '歴史'],
+    },
+    l_tower: {
+      id: 'l_tower',
+      title: '高い場所は情報の泉',
+      body:
+        '見張り台がひとつあるだけで、島の安全はまるで変わる。船の帆も、嵐の前ぶれも、迷った仲間の焚き火も、高い場所からなら一目でわかる。灯台や火の見やぐらなど、人類は昔から「高さ」を安全のために築いてきた。塔は石とロープでできた、島の目だ。',
+      tags: ['技術', 'サバイバル'],
+    },
+    l_smoke: {
+      id: 'l_smoke',
+      title: '煙が食べものを守る',
+      body:
+        '燻製は「乾燥」と「煙の成分」の合わせ技だ。煙に含まれる成分には菌の繁殖を抑えるはたらきがあり、水分の抜けた肉や魚は何週間ももつ。冷蔵庫のない時代、煙は世界中の台所の知恵だった。冬の長いチェアマン島では、これが命綱になる。',
+      tags: ['食', '技術'],
+    },
+    l_pier: {
+      id: 'l_pier',
+      title: '桟橋という橋',
+      body:
+        '桟橋は陸と海をつなぐ橋だ。杭を海底に打ちこみ、波より高く板を渡す——構造は単純だが、波と潮の満ち引きに耐える位置と高さの見きわめが難しい。舟の乗り降り、荷の積みおろし、そして釣り。桟橋一本で、海との付き合い方が変わる。',
+      tags: ['技術', '航海'],
+    },
+    l_flotsam: {
+      id: 'l_flotsam',
+      title: '海流は運び屋',
+      body:
+        '海には大河のような流れ——海流がある。難破船の積み荷は海流に乗って何百キロも旅をし、思わぬ岸に流れ着く。漂流者にとって浜辺は宝探しの場所だ。原作の少年たちも、漂着物から多くを得た。海は奪うだけでなく、ときどき返してくれる。',
+      tags: ['自然', '航海'],
+    },
+    l_turtle: {
+      id: 'l_turtle',
+      title: 'ウミガメの浜',
+      body:
+        'ウミガメは自分が生まれた浜に帰って産卵するといわれる。砂の温度が子ガメの性別を決め、月夜に一斉に海へ走る——その旅は何千キロにも及ぶ。卵は栄養豊富だが、取りすぎれば浜からカメが消える。少年たちは三つだけ分けてもらい、砂をかけ直した。',
+      tags: ['自然', '食'],
+    },
+    l_cairn: {
+      id: 'l_cairn',
+      title: '石塚（ケルン）は無言の道しるべ',
+      body:
+        '道なき土地を歩く者は、石を積んで印を残す。登山道のケルン、極地探検の記録塚——積まれた石は「ここに人が来た」という無言の手紙だ。西の岬の石塚は、ボードワンが測量の目印に築いたものだろう。五十年前の孤独な仕事が、いま少年たちの地図を支えている。',
+      tags: ['歴史', '地理'],
+    },
+    l_bathe: {
+      id: 'l_bathe',
+      title: '体を洗うということ',
+      body:
+        '石けんのない島でも、水浴びは大切な仕事だ。汗と垢をためた肌は傷口から膿みやすく、衣類の虫は病気を運ぶ。19世紀は「清潔」が医学の言葉になりはじめた時代——ナイチンゲールが野戦病院でやったことの第一も、洗うことだった。湖の冷たい水は、島の保健室だ。',
+      tags: ['サバイバル', '心'],
+    },
   },
 
   interactables: [
     ...driftwood,
     ...shellfish,
     ...firewood,
+    ...resources,
+    // ===== 岬の宝と湖の楽しみ =====
+    {
+      id: 'tr_wreck',
+      position: WRECK_EAST,
+      prompt: '流れ着いた木箱をこじ開ける',
+      radius: 3.2,
+      once: true,
+      effects: {
+        items: { rope: 2, wood: 2 },
+        learning: ['l_flotsam'],
+        params: { morale: 5 },
+        minutes: 40,
+      },
+    },
+    {
+      id: 'tr_turtle',
+      position: TURTLE_SOUTH,
+      prompt: 'ウミガメの巣から卵を三つだけ分けてもらう',
+      radius: 3.2,
+      once: true,
+      effects: {
+        items: { egg: 3 },
+        learning: ['l_turtle'],
+        params: { morale: 3 },
+        minutes: 30,
+      },
+    },
+    {
+      id: 'tr_cairn',
+      position: CAIRN_WEST,
+      prompt: '積み石の下を調べる',
+      radius: 3.2,
+      once: true,
+      effects: {
+        learning: ['l_cairn'],
+        params: { morale: 6, supplies: 5 },
+        minutes: 30,
+      },
+    },
+    {
+      id: 'act_bathe',
+      position: BATHE_ROCK,
+      prompt: '湖で水浴びをする',
+      radius: 3.2,
+      cooldownHours: 20,
+      requiresFlag: 'cave_moved',
+      effects: { params: { stamina: 10, morale: 3 }, learning: ['l_bathe'], minutes: 45 },
+    },
+    {
+      id: 'act_towerview',
+      position: TOWER_SITE,
+      prompt: '物見やぐらにのぼって見張りをする',
+      radius: 3.5,
+      cooldownHours: 12,
+      requiresFlag: 'tower_built',
+      effects: { params: { morale: 4 }, minutes: 60 },
+    },
+    {
+      id: 'act_pierfish',
+      position: PIER_SITE,
+      prompt: '桟橋から釣り糸を垂れる',
+      radius: 3.2,
+      cooldownHours: 4,
+      requiresFlag: 'pier_built',
+      effects: { items: { fish: 2 }, params: { stamina: -1 }, minutes: 60 },
+    },
     {
       id: 'ship_wreck',
       position: SHIP,
@@ -1742,6 +2113,166 @@ export const twoYearsVacation: ContentPack = {
       effects: { dialogue: 'dlg_evans_chat' },
     },
   ],
+
+  // ===== クラフト・建設（手帳の「つくる」） =====
+  recipes: [
+    // --- 道具 ---
+    {
+      id: 'rc_rod',
+      label: '釣り竿',
+      description: '葦の竿に、ほどいた帆布の糸。湖と川に釣り場が現れる',
+      inputs: { wood: 1, reed: 2 },
+      effects: { flags: ['rod_made'], learning: ['l_fishing'], minutes: 60 },
+      requiresFlag: 'cave_moved',
+      hideFlag: 'rod_made',
+    },
+    {
+      id: 'rc_rope',
+      label: 'ロープ',
+      description: '葦を叩いて繊維をとり、三つ編みにする。建設の必需品',
+      inputs: { reed: 3 },
+      effects: { items: { rope: 1 }, minutes: 45 },
+      requiresFlag: 'cave_moved',
+    },
+    {
+      id: 'rc_pot',
+      label: '土器の鍋',
+      description: '川の粘土をこねて野焼きに。スープが作れるようになる',
+      inputs: { clay: 3, wood: 1 },
+      effects: { flags: ['pot_made'], learning: ['l_pottery'], minutes: 120 },
+      requiresFlag: 'cave_moved',
+      hideFlag: 'pot_made',
+    },
+    // --- 料理（counter: dishes_cooked） ---
+    {
+      id: 'rc_grill',
+      label: '焼き魚',
+      description: '獲れたての魚を焚き火で。いちばん簡単で、いちばんのごちそう',
+      inputs: { fish: 1, wood: 1 },
+      effects: {
+        params: { hunger: 22, morale: 2 },
+        counters: { dishes_cooked: 1 },
+        minutes: 30,
+      },
+      requiresFlag: 'rod_made',
+    },
+    {
+      id: 'rc_jam',
+      label: '森の実の煮つめ',
+      description: '甘ずっぱい実をとろとろに煮る。年少組の大好物',
+      inputs: { berry: 2, wood: 1 },
+      effects: {
+        params: { hunger: 14, morale: 5 },
+        counters: { dishes_cooked: 1 },
+        minutes: 40,
+      },
+      requiresFlag: 'cave_moved',
+    },
+    {
+      id: 'rc_omelet',
+      label: '海鳥の卵焼き',
+      description: '崖の巣から分けてもらった大きな卵を、ふんわり焼く',
+      inputs: { egg: 1, wood: 1 },
+      effects: {
+        params: { hunger: 20, stamina: 6 },
+        counters: { dishes_cooked: 1 },
+        minutes: 30,
+      },
+      requiresFlag: 'cave_moved',
+    },
+    {
+      id: 'rc_soup',
+      label: '薬草のスープ',
+      description: '湿原の薬草と魚を土器の鍋でことこと。体の芯から力が湧く',
+      inputs: { herb: 1, fish: 1, wood: 1 },
+      effects: {
+        params: { stamina: 18, hunger: 12 },
+        counters: { dishes_cooked: 1 },
+        minutes: 45,
+      },
+      requiresFlag: 'pot_made',
+    },
+    {
+      id: 'rc_smoked',
+      label: '燻製の魚',
+      description: '燻製小屋でじっくり燻す。日持ちする保存食は冬の備えになる',
+      inputs: { fish: 2, wood: 1 },
+      effects: {
+        params: { hunger: 18, supplies: 6 },
+        counters: { dishes_cooked: 1 },
+        minutes: 90,
+      },
+      requiresFlag: 'smokehouse_built',
+    },
+    // --- 建設（counter: buildings。完成すると風景に現れる） ---
+    {
+      id: 'rc_tower',
+      label: '物見やぐら【建設】',
+      description: '大凧の丘の頂に見張り台を組む。島じゅうが一望できる',
+      inputs: { wood: 8, stone: 2, rope: 2 },
+      effects: {
+        flags: ['tower_built'],
+        counters: { buildings: 1 },
+        params: { development: 8, stamina: -10 },
+        minutes: 480,
+      },
+      requiresFlag: 'cave_moved',
+      hideFlag: 'tower_built',
+    },
+    {
+      id: 'rc_smokehouse',
+      label: '燻製小屋【建設】',
+      description: 'フレンチ・デンの上手に、石積みと粘土の小屋を建てる',
+      inputs: { wood: 6, stone: 4, clay: 2 },
+      effects: {
+        flags: ['smokehouse_built'],
+        counters: { buildings: 1 },
+        params: { development: 8, stamina: -10 },
+        minutes: 480,
+      },
+      requiresFlag: 'cave_moved',
+      hideFlag: 'smokehouse_built',
+    },
+    {
+      id: 'rc_pier',
+      label: '桟橋【建設】',
+      description: 'スルギ湾の波打ち際から沖へ。とっておきの釣り場になる',
+      inputs: { wood: 10, rope: 3 },
+      effects: {
+        flags: ['pier_built'],
+        counters: { buildings: 1 },
+        params: { development: 8, stamina: -10 },
+        minutes: 480,
+      },
+      requiresFlag: 'cave_moved',
+      hideFlag: 'pier_built',
+    },
+  ],
+
+  // ===== 地図に載る場所（近づくと「発見」。counter: landmarks_found） =====
+  landmarks: [
+    { id: 'lk_bay', label: 'スルギ湾', position: LANDMARKS.bay, radius: 12 },
+    { id: 'lk_hill', label: 'オークランドの丘', position: LANDMARKS.hill, radius: 10 },
+    { id: 'lk_den', label: 'フレンチ・デン', position: CAVE, radius: 9 },
+    { id: 'lk_grave', label: 'ボードワンの墓', position: LANDMARKS.grave, radius: 7 },
+    { id: 'lk_traps', label: '罠の森', position: LANDMARKS.traps, radius: 9 },
+    { id: 'lk_moors', label: 'サウス・ムーア', position: LANDMARKS.moors, radius: 10 },
+    { id: 'lk_severn', label: 'セヴァーン海岸', position: LANDMARKS.severn, radius: 10 },
+    { id: 'lk_north', label: '北のキャンプ跡', position: NORTH, radius: 9 },
+    { id: 'lk_lake', label: 'ファミリー湖', position: LAKE, radius: 13 },
+    { id: 'lk_bridge', label: '丸木橋', position: BRIDGE, radius: 7 },
+    { id: 'lk_ford', label: '河口の浅瀬', position: FORD, radius: 8 },
+    { id: 'lk_knoll', label: '大凧の丘', position: KNOLL, radius: 10 },
+    { id: 'lk_ecape', label: '東の岬', position: EAST_CAPE, radius: 12 },
+    { id: 'lk_ncape', label: '北の岬', position: NORTH_CAPE, radius: 12 },
+    { id: 'lk_sbeach', label: '南の大砂浜', position: SOUTH_BEACH, radius: 12 },
+    { id: 'lk_wcape', label: '西の岬', position: WEST_CAPE, radius: 12 },
+    { id: 'lk_wreck', label: '漂着物の入り江', position: WRECK_EAST, radius: 8 },
+    { id: 'lk_turtle', label: 'ウミガメの浜', position: TURTLE_SOUTH, radius: 8 },
+    { id: 'lk_cairn', label: '測量の石塚', position: CAIRN_WEST, radius: 8 },
+    { id: 'lk_smoke', label: '燻製小屋の丘', position: SMOKE_SITE, radius: 7 },
+  ],
+  mapBounds: [-135, -135, 135, 135],
 
   startTime: { day: 1, hour: 6 },
   spawn: SPAWN,

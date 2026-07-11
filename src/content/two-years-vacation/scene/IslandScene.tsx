@@ -3,26 +3,30 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { setGround } from '../../../engine/ground';
 import { addObstacle } from '../../../engine/obstacles';
-import {
-  buildIslandGeometry,
-  islandHeight,
-  ISLAND_RADIUS,
-} from '../../../shared-assets/procedural/terrain';
+import { buildIslandGeometry } from '../../../shared-assets/procedural/terrain';
 import {
   scatterOnIsland,
   applyInstances,
 } from '../../../shared-assets/procedural/vegetation';
+import {
+  chairmanHeight,
+  chairmanGroundHeight,
+  chairmanWalkable,
+  WORLD_SIZE,
+} from '../terrain';
+import { clearOfKeepOut } from '../layout';
 import { StageProps } from './StageProps';
+import { ExpansionProps } from './ExpansionProps';
 
 // Layer 3: 十五少年漂流記の舞台「チェアマン島」。
 // 地形・海・植生はすべてプロシージャル生成（ライセンス完全クリーン）。
+// 地形は共有ライブラリの基本島＋作品側の拡張（湖・川・丸木橋・沿岸低地・高丘）。
 
 export function IslandScene() {
   useEffect(() => {
     setGround({
-      heightAt: islandHeight,
-      isWalkable: (x, z) =>
-        islandHeight(x, z) > -0.45 && Math.hypot(x, z) < ISLAND_RADIUS * 1.05,
+      heightAt: chairmanGroundHeight, // 丸木橋の上も歩ける
+      isWalkable: chairmanWalkable,
     });
   }, []);
 
@@ -32,12 +36,13 @@ export function IslandScene() {
       <Ocean />
       <Vegetation />
       <StageProps />
+      <ExpansionProps />
     </group>
   );
 }
 
 function Terrain() {
-  const geometry = useMemo(() => buildIslandGeometry(150), []);
+  const geometry = useMemo(() => buildIslandGeometry(190, chairmanHeight, WORLD_SIZE), []);
   return (
     <mesh geometry={geometry} receiveShadow>
       <meshStandardMaterial vertexColors flatShading roughness={0.95} />
@@ -95,11 +100,25 @@ function Ocean() {
 }
 
 function Vegetation() {
+  // 拡張後の全世界（r≈132）に散布。舞台装置・導線の keep-out 円は避ける。
   const trees = useMemo(
-    () => scatterOnIsland(200, 1234, (h, slope) => h > 1.4 && h < 11 && slope < 0.75),
+    () =>
+      scatterOnIsland(
+        320,
+        1234,
+        (h, slope) => h > 1.4 && h < 11 && slope < 0.75,
+        chairmanHeight,
+        132,
+      ).filter((p) => clearOfKeepOut(p.x, p.z)),
     [],
   );
-  const rocks = useMemo(() => scatterOnIsland(70, 5678, (h) => h > 0.3 && h < 14), []);
+  const rocks = useMemo(
+    () =>
+      scatterOnIsland(110, 5678, (h) => h > 0.3 && h < 14, chairmanHeight, 132).filter((p) =>
+        clearOfKeepOut(p.x, p.z),
+      ),
+    [],
+  );
 
   const group = useMemo(() => {
     const g = new THREE.Group();
@@ -148,9 +167,11 @@ function Vegetation() {
 
     // 草むら
     const tufts = scatterOnIsland(
-      450,
+      650,
       9012,
       (h, slope) => h > 1.3 && h < 10 && slope < 0.6,
+      chairmanHeight,
+      132,
     );
     const tuftGeo = new THREE.ConeGeometry(0.28, 0.5, 4);
     const tuftMat = new THREE.MeshStandardMaterial({ flatShading: true });
