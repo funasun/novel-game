@@ -62,6 +62,8 @@ export async function saveGame(): Promise<void> {
     usedInteractables: s.usedInteractables,
     firedEvents: s.firedEvents,
     player: [playerPosition.x, playerPosition.y, playerPosition.z],
+    usedAt: s.usedAt,
+    visitedLandmarks: s.visitedLandmarks,
   };
   await idbSet(`${s.pack.id}/${SLOT}`, data);
 }

@@ -9,23 +9,33 @@ export interface ScatterPoint {
   rand: number; // 0..1 個体差用
 }
 
-// 島の上に条件を満たす散布点を作る（決定論的）
+// 島の上に条件を満たす散布点を作る（決定論的）。
+// 高さ関数と散布半径は差し替え可能 — 作品側の拡張地形にもそのまま使える。
 export function scatterOnIsland(
   count: number,
   seed: number,
   accept: (h: number, slope: number) => boolean,
+  heightFn: (x: number, z: number) => number = islandHeight,
+  radius: number = ISLAND_RADIUS,
 ): ScatterPoint[] {
   const rng = mulberry32(seed);
   const points: ScatterPoint[] = [];
+  const slopeOf = (x: number, z: number): number => {
+    if (heightFn === islandHeight) return islandSlope(x, z);
+    const e = 0.8;
+    const hx = heightFn(x + e, z) - heightFn(x - e, z);
+    const hz = heightFn(x, z + e) - heightFn(x, z - e);
+    return Math.sqrt(hx * hx + hz * hz) / (2 * e);
+  };
   let attempts = 0;
   while (points.length < count && attempts < count * 30) {
     attempts++;
     const a = rng() * Math.PI * 2;
-    const r = Math.sqrt(rng()) * ISLAND_RADIUS;
+    const r = Math.sqrt(rng()) * radius;
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
-    const h = islandHeight(x, z);
-    if (accept(h, islandSlope(x, z))) {
+    const h = heightFn(x, z);
+    if (accept(h, slopeOf(x, z))) {
       points.push({ x, z, h, rand: rng() });
     }
   }

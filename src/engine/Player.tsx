@@ -5,13 +5,15 @@ import { getGround } from './ground';
 import { obstructed } from './obstacles';
 import { playerPosition } from './playerState';
 import { touchMove } from './touchInput';
+import { consumeWarp } from './warp';
 import { Character, Limbs } from './Character';
 import { useGame, isUiLocked } from './store/gameStore';
 
 // Layer 1: 操作可能アバター。WASD/矢印キー移動、ドラッグでカメラ回転、地形に接地。
-// 会話・ナレーション中は移動をロックする。
+// Shift（またはジョイスティックの倒し込み）でダッシュ。会話・ナレーション中は移動をロックする。
 
 const MOVE_SPEED = 6;
+const DASH_MULT = 1.55;
 const CAMERA_DISTANCE = 9;
 
 export function Player() {
@@ -101,8 +103,20 @@ export function Player() {
 
     const ground = getGround();
     const p = root.current.position;
+
+    // テレポート要求（Effects.teleport）を消費。カメラは次フレームで即座に切り替える。
+    const warp = consumeWarp();
+    if (warp) {
+      p.x = warp[0];
+      p.z = warp[1];
+      initialized.current = false;
+    }
+
+    // ダッシュ：Shift または ジョイスティックを目一杯倒す（広い世界の移動をだるくしない）
+    const dashing =
+      moving && (k.ShiftLeft || k.ShiftRight || Math.hypot(touchMove.x, touchMove.y) > 0.92);
     if (moving) {
-      move.normalize().multiplyScalar(MOVE_SPEED * delta);
+      move.normalize().multiplyScalar(MOVE_SPEED * (dashing ? DASH_MULT : 1) * delta);
       // 通れる先か？＝地形が歩行可 かつ 人・物にめり込まない。
       const free = (x: number, z: number) => ground.isWalkable(x, z) && !obstructed(x, z);
       const step = (dx: number, dz: number) => {
@@ -119,7 +133,7 @@ export function Player() {
       let diff = targetAngle - body.current.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       body.current.rotation.y += diff * Math.min(1, delta * 12);
-      walkT.current += delta * 9;
+      walkT.current += delta * (dashing ? 12.5 : 9);
     }
     p.y = Math.max(ground.heightAt(p.x, p.z), -0.35);
     playerPosition.copy(p);

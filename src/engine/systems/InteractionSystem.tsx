@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { playerPosition } from '../playerState';
-import { useGame, isUiLocked } from '../store/gameStore';
+import { useGame, isUiLocked, totalMinutes } from '../store/gameStore';
 import type { InteractableDef } from '../types';
 
 // Layer 1: 近接インタラクト。プレイヤーの近くにある対象を検出し、Eキーで実行する。
@@ -11,10 +11,17 @@ export function interactableActive(
   def: InteractableDef,
   flags: Record<string, boolean>,
   used: Record<string, boolean>,
+  usedAt?: Record<string, number>,
+  nowMinutes?: number,
 ): boolean {
   if (def.once && used[def.id]) return false;
   if (def.requiresFlag && !flags[def.requiresFlag]) return false;
   if (def.hideFlag && flags[def.hideFlag]) return false;
+  // 採集資源のクールダウン：使ってからゲーム内で所定時間たつまで休眠
+  if (def.cooldownHours && usedAt && nowMinutes !== undefined) {
+    const at = usedAt[def.id];
+    if (at !== undefined && nowMinutes - at < def.cooldownHours * 60) return false;
+  }
   return true;
 }
 
@@ -27,6 +34,12 @@ export function triggerInteract(): void {
   if (def.once) {
     useGame.setState({
       usedInteractables: { ...s.usedInteractables, [def.id]: true },
+      nearby: null,
+    });
+  }
+  if (def.cooldownHours) {
+    useGame.setState({
+      usedAt: { ...s.usedAt, [def.id]: totalMinutes(s.time) },
       nearby: null,
     });
   }
@@ -43,8 +56,9 @@ export function InteractionSystem() {
     }
     let best: string | null = null;
     let bestDist = Infinity;
+    const now = totalMinutes(s.time);
     for (const def of s.pack.interactables) {
-      if (!interactableActive(def, s.flags, s.usedInteractables)) continue;
+      if (!interactableActive(def, s.flags, s.usedInteractables, s.usedAt, now)) continue;
       const dx = def.position[0] - playerPosition.x;
       const dz = def.position[1] - playerPosition.z;
       const dist = Math.hypot(dx, dz);

@@ -21,10 +21,10 @@ export function Waypoint() {
   const quests = useGame((s) => s.quests);
   const pack = useGame((s) => s.pack);
 
-  // 進行中クエストの目標座標。無ければ誘導なし。
+  // 進行中クエスト（よりみちを除く先頭）の目標座標。無ければ誘導なし。
   const target = useMemo(() => {
     if (!pack) return null;
-    const active = quests.find((q) => q.status === 'active');
+    const active = quests.find((q) => q.status === 'active' && !pack.quests[q.id]?.side);
     const wp = active ? pack.quests[active.id]?.waypoint : undefined;
     if (!wp) return null;
     return new THREE.Vector3(wp[0], getGround().heightAt(wp[0], wp[1]), wp[1]);

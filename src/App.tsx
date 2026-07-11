@@ -6,6 +6,7 @@ import { TouchControls } from './engine/ui/TouchControls';
 import { DialogueBox } from './engine/ui/DialogueBox';
 import { NarrationOverlay } from './engine/ui/NarrationOverlay';
 import { LearningToast, Journal } from './engine/learning/LearningLayer';
+import { DiscoveryToast } from './engine/ui/DiscoveryToast';
 import { ControlsTutorial } from './engine/ui/ControlsTutorial';
 import { OrientationGate } from './engine/ui/OrientationGate';
 import { InstallHint } from './engine/ui/InstallHint';
@@ -78,6 +79,7 @@ export default function App() {
           <DialogueBox />
           <NarrationOverlay />
           <LearningToast />
+          <DiscoveryToast />
           <Journal />
           <EventSystem />
           <AutoSave />

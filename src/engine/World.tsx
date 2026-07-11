@@ -4,6 +4,7 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { DayNightRig } from './DayNightRig';
 import { TimeSystem } from './systems/TimeSystem';
 import { InteractionSystem } from './systems/InteractionSystem';
+import { DiscoverySystem } from './systems/DiscoverySystem';
 import { Waypoint } from './Waypoint';
 
 // Layer 1: 3Dシーンの器。昼夜ライティング・時間進行・インタラクト検出・ポストプロセスを内蔵。
@@ -29,6 +30,7 @@ export function World({ children }: { children: ReactNode }) {
       <DayNightRig />
       <TimeSystem />
       <InteractionSystem />
+      <DiscoverySystem />
       {children}
       <Waypoint />
       <EffectComposer>

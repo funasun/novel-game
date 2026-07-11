@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { ContentPack, Effects } from '../types';
 import { clearObstacles } from '../obstacles';
+import { requestWarp } from '../warp';
+import { sfx } from '../audio';
 
 // Layer 1: ゲーム状態の一元管理。エンジンはパラメータやフラグの「意味」を知らない。
 
@@ -20,6 +22,14 @@ export interface SaveData {
   usedInteractables: Record<string, boolean>;
   firedEvents: Record<string, boolean>;
   player: [number, number, number];
+  // 後から増えた項目（旧セーブには無いので optional。読込側は ?? {} で移行する）
+  usedAt?: Record<string, number>; // 採集資源を最後に使ったゲーム内絶対分
+  visitedLandmarks?: Record<string, boolean>; // 発見済みの場所
+}
+
+// ゲーム内絶対分（日をまたぐ経過比較用）。資源のクールダウン判定に使う。
+export function totalMinutes(t: { day: number; hour: number; minute: number }): number {
+  return (t.day * 24 + t.hour) * 60 + t.minute;
 }
 
 interface GameState {
@@ -33,18 +43,23 @@ interface GameState {
   journal: string[]; // 獲得済みの学びID（獲得順）
   usedInteractables: Record<string, boolean>;
   firedEvents: Record<string, boolean>;
+  usedAt: Record<string, number>; // 採集資源を最後に使ったゲーム内絶対分（クールダウン用）
+  visitedLandmarks: Record<string, boolean>; // 発見済みの場所
 
   // 揮発状態（保存しない）
   nearby: string | null;
   dialogue: { id: string; line: number } | null;
   narration: { lines: string[]; index: number } | null;
   learningToast: string | null;
+  discoveryToast: string | null; // 直近に発見した場所ID
   journalOpen: boolean;
   savedPlayer: [number, number, number] | null;
 
   init: (pack: ContentPack, save?: SaveData) => void;
   advanceMinutes: (mins: number) => void;
   applyEffects: (effects?: Effects) => void;
+  craft: (recipeId: string) => void;
+  visitLandmark: (id: string) => void;
   setNearby: (id: string | null) => void;
   startDialogue: (id: string) => void;
   advanceDialogue: () => void;
@@ -52,6 +67,7 @@ interface GameState {
   startNarration: (lines: string[]) => void;
   advanceNarration: () => void;
   dismissLearning: () => void;
+  dismissDiscovery: () => void;
   setJournalOpen: (open: boolean) => void;
   markEventFired: (id: string) => void;
 }
@@ -93,11 +109,14 @@ export const useGame = create<GameState>((set, get) => ({
   journal: [],
   usedInteractables: {},
   firedEvents: {},
+  usedAt: {},
+  visitedLandmarks: {},
 
   nearby: null,
   dialogue: null,
   narration: null,
   learningToast: null,
+  discoveryToast: null,
   journalOpen: false,
   savedPlayer: null,
 
@@ -121,12 +140,15 @@ export const useGame = create<GameState>((set, get) => ({
       journal: save ? save.journal : [],
       usedInteractables: save ? save.usedInteractables : {},
       firedEvents: save ? save.firedEvents : {},
+      usedAt: save ? (save.usedAt ?? {}) : {},
+      visitedLandmarks: save ? (save.visitedLandmarks ?? {}) : {},
       savedPlayer: save ? save.player : null,
       // 揮発状態は常にリセット
       nearby: null,
       dialogue: null,
       narration: null,
       learningToast: null,
+      discoveryToast: null,
       journalOpen: false,
     });
   },
@@ -161,10 +183,13 @@ export const useGame = create<GameState>((set, get) => ({
     }
     if (effects.items) {
       const inventory = { ...get().inventory };
+      let gained = false;
       for (const [key, delta] of Object.entries(effects.items)) {
         inventory[key] = Math.max(0, (inventory[key] ?? 0) + delta);
+        if (delta > 0) gained = true;
       }
       set({ inventory });
+      if (gained) sfx.item();
     }
     if (effects.counters) {
       const counters = { ...get().counters };
@@ -188,15 +213,19 @@ export const useGame = create<GameState>((set, get) => ({
     if (effects.learning) {
       const journal = [...get().journal];
       let toast: string | null = get().learningToast;
+      let learned = false;
       for (const id of effects.learning) {
         if (!journal.includes(id)) {
           journal.push(id);
           toast = id;
+          learned = true;
         }
       }
       set({ journal, learningToast: toast });
+      if (learned) sfx.learn();
     }
     if (effects.minutes) get().advanceMinutes(effects.minutes);
+    if (effects.teleport) requestWarp(effects.teleport[0], effects.teleport[1]);
     if (effects.dialogue) get().startDialogue(effects.dialogue);
 
     // クエスト達成チェック
@@ -211,7 +240,35 @@ export const useGame = create<GameState>((set, get) => ({
         (goal.type === 'flag' && !!after.flags[goal.flag]);
       return met ? { ...q, status: 'done' as const } : q;
     });
-    if (quests.some((q, i) => q !== after.quests[i])) set({ quests });
+    if (quests.some((q, i) => q !== after.quests[i])) {
+      set({ quests });
+      sfx.quest();
+    }
+  },
+
+  // レシピを作る。素材が足りなければ何もしない（UI側でボタンを無効化して案内する）。
+  craft: (recipeId) => {
+    const s = get();
+    const recipe = s.pack?.recipes?.find((r) => r.id === recipeId);
+    if (!recipe) return;
+    if (recipe.hideFlag && s.flags[recipe.hideFlag]) return; // 建設済みなど
+    for (const [item, n] of Object.entries(recipe.inputs)) {
+      if ((s.inventory[item] ?? 0) < n) return;
+    }
+    const inventory = { ...s.inventory };
+    for (const [item, n] of Object.entries(recipe.inputs)) inventory[item] -= n;
+    set({ inventory });
+    sfx.craft();
+    get().applyEffects(recipe.effects);
+  },
+
+  visitLandmark: (id) => {
+    const s = get();
+    if (s.visitedLandmarks[id]) return;
+    set({ visitedLandmarks: { ...s.visitedLandmarks, [id]: true }, discoveryToast: id });
+    sfx.discover();
+    // 発見数はカウンタ landmarks_found に積む（クエスト目標に使える）。applyEffects 経由で達成判定も走る。
+    get().applyEffects({ counters: { landmarks_found: 1 } });
   },
 
   setNearby: (id) => {
@@ -265,6 +322,7 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   dismissLearning: () => set({ learningToast: null }),
+  dismissDiscovery: () => set({ discoveryToast: null }),
   setJournalOpen: (open) => set({ journalOpen: open }),
   markEventFired: (id) => set({ firedEvents: { ...get().firedEvents, [id]: true } }),
 }));

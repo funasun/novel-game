@@ -4,6 +4,7 @@ import { useGame, isUiLocked } from '../store/gameStore';
 import { timePhase } from '../systems/TimeSystem';
 import { resetGame } from '../systems/SaveSystem';
 import { guidance } from '../guidance';
+import { isMuted, setMuted } from '../audio';
 import {
   fullscreenSupported,
   isFullscreen,
@@ -36,7 +37,8 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
 
   if (!pack) return null;
 
-  const activeQuest = quests.find((q) => q.status === 'active');
+  // よりみち（side）は HUD の目標パネルに出さない（手帳で確認する）
+  const activeQuest = quests.find((q) => q.status === 'active' && !pack.quests[q.id]?.side);
   const questDef = activeQuest ? pack.quests[activeQuest.id] : null;
   const nearbyDef = nearby ? pack.interactables.find((d) => d.id === nearby) : null;
   const items = Object.entries(inventory).filter(([, n]) => n > 0);
@@ -62,6 +64,9 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
     setFs(isFullscreen());
     return onFullscreenChange(() => setFs(isFullscreen()));
   }, [canFullscreen]);
+
+  // 効果音のミュートトグル
+  const [mute, setMute] = useState(isMuted);
 
   return (
     <div style={overlay}>
@@ -116,6 +121,14 @@ export function HUD({ onHome, onRestart }: { onHome?: () => void; onRestart?: ()
           </div>
         )}
         <div style={{ pointerEvents: 'auto', display: 'inline-flex', gap: 8 }}>
+          <HudButton
+            onClick={() => {
+              setMuted(!mute);
+              setMute(!mute);
+            }}
+          >
+            {mute ? '♪ 切' : '♪'}
+          </HudButton>
           {canFullscreen && (
             <HudButton onClick={() => void toggleAppFullscreen()}>
               {fs ? '全画面解除' : '全画面'}

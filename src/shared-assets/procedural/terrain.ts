@@ -28,13 +28,18 @@ const GRASS_B = new THREE.Color('#7cb85a');
 const ROCK = new THREE.Color('#8d8578');
 const SEABED = new THREE.Color('#c9b98d');
 
-// フラットシェーディングの低ポリ島ジオメトリを生成（面ごとに頂点色を塗る）
-export function buildIslandGeometry(segments = 150): THREE.BufferGeometry {
-  const plane = new THREE.PlaneGeometry(ISLAND_SIZE, ISLAND_SIZE, segments, segments);
+// フラットシェーディングの低ポリ島ジオメトリを生成（面ごとに頂点色を塗る）。
+// 高さ関数とメッシュ一辺は差し替え可能 — 作品側が拡張した地形（湖・川など）でも同じ見た目文法で描ける。
+export function buildIslandGeometry(
+  segments = 150,
+  heightFn: (x: number, z: number) => number = islandHeight,
+  size: number = ISLAND_SIZE,
+): THREE.BufferGeometry {
+  const plane = new THREE.PlaneGeometry(size, size, segments, segments);
   plane.rotateX(-Math.PI / 2);
   const pos = plane.attributes.position;
   for (let i = 0; i < pos.count; i++) {
-    pos.setY(i, islandHeight(pos.getX(i), pos.getZ(i)));
+    pos.setY(i, heightFn(pos.getX(i), pos.getZ(i)));
   }
   const geo = plane.toNonIndexed();
   plane.dispose();
