@@ -50,18 +50,24 @@ async function runStep(step: EventStep): Promise<void> {
   }
 }
 
-const queue: EventDef[] = [];
+// epoch: 作品セッションの世代番号。ホーム⇄ゲームの往復や作品切替で EventSystem が
+// マウントし直されるたびに進める。宙づりの drain（前作の会話待ち等）は、待ちが解けた
+// 瞬間に世代不一致を検知して静かに死ぬ。これが無いと、前作のイベント列が次の作品の
+// 上で続きを実行してしまう（例: 途中でホームへ戻り別作品を始めると前作の会話が現れる）。
+let epoch = 0;
+let queue: EventDef[] = [];
 let running = false;
 
-async function drain(): Promise<void> {
+async function drain(myEpoch: number): Promise<void> {
   running = true;
-  while (queue.length > 0) {
+  while (queue.length > 0 && myEpoch === epoch) {
     const ev = queue.shift()!;
     for (const step of ev.steps) {
+      if (myEpoch !== epoch) break;
       await runStep(step);
     }
   }
-  running = false;
+  if (myEpoch === epoch) running = false;
 }
 
 function fire(ev: EventDef): void {
@@ -69,7 +75,7 @@ function fire(ev: EventDef): void {
   if (s.firedEvents[ev.id]) return;
   s.markEventFired(ev.id);
   queue.push(ev);
-  if (!running) void drain();
+  if (!running) void drain(epoch);
 }
 
 function checkTriggers(s: GameSnapshot): void {
@@ -96,6 +102,10 @@ function checkTriggers(s: GameSnapshot): void {
 
 export function EventSystem() {
   useEffect(() => {
+    // 新しい作品セッションの開始。前作の残りイベントを捨て、宙づりの drain を無効化する。
+    epoch++;
+    queue = [];
+    running = false;
     const s = useGame.getState();
     if (!s.pack) return;
     for (const ev of s.pack.events) {
