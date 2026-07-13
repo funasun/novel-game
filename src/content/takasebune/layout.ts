@@ -61,6 +61,17 @@ export const AKATSUKI: [number, number] = [-9, M4 + 7]; // 暁の気配を待つ
 // 石灯籠（第二の舫い・地蔵のそば）
 export const TOURO: [number, number] = [-7.5, M2 - 8];
 
+// 火の消えた灯籠。各舫いにひとつ——第二の舫いでは、灯る TOURO と対のかたわれ。
+// 岸の蛍を掬って火袋に放すと、蛍いろに灯る（フラグ lit1..lit4）。
+export const KIETOURO1: [number, number] = [-10.5, M1 - 1];
+export const KIETOURO2: [number, number] = [-10.5, M2 - 8];
+export const KIETOURO3: [number, number] = [-10.8, M3 + 1.5];
+export const KIETOURO4: [number, number] = [-9.5, M4 + 2.5];
+
+// 蛍の茂み（掬える）。M1/M3 は既存の点景の茂みを使い、M2/M4 はここに新設。
+export const HOTARU_M2: [number, number] = [-11, M2 + 8];
+export const HOTARU_M4: [number, number] = [-11.5, M4 + 4];
+
 // ── 岸辺の小物の当たり判定 [中心x, 中心z, 半幅x, 半幅z] ──
 export const PROP_BLOCKERS: ReadonlyArray<readonly [number, number, number, number]> = [
   [KOSATSU[0], KOSATSU[1], 1.1, 0.5], // 高札場
@@ -70,6 +81,10 @@ export const PROP_BLOCKERS: ReadonlyArray<readonly [number, number, number, numb
   [TOURO[0], TOURO[1], 0.4, 0.4], // 石灯籠
   [KUI[0], KUI[1], 0.3, 0.3], // 舫い杭
   [YANAGI3[0], YANAGI3[1], 0.6, 0.6],
+  [KIETOURO1[0], KIETOURO1[1], 0.35, 0.35], // 火の消えた灯籠×4
+  [KIETOURO2[0], KIETOURO2[1], 0.35, 0.35],
+  [KIETOURO3[0], KIETOURO3[1], 0.35, 0.35],
+  [KIETOURO4[0], KIETOURO4[1], 0.35, 0.35],
 ];
 
 // 橋（舫いと舫いの中間、視覚のリズム。歩行域の外なので当たりは不要）

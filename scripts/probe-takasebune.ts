@@ -3,6 +3,16 @@ import {
   takaseWalkable,
   SPAWN,
   MOORINGS,
+  M1,
+  M2,
+  M3,
+  M4,
+  KIETOURO1,
+  KIETOURO2,
+  KIETOURO3,
+  KIETOURO4,
+  HOTARU_M2,
+  HOTARU_M4,
   KISUKE_SEAT,
   TALK_SPOT,
   SENDO,
@@ -72,6 +82,21 @@ w('te hitasu spot', TE_HITASU[0], TE_HITASU[1]);
 w('kui blocked', KUI[0], KUI[1], false);
 w('kui approach', KUI[0] - 1, KUI[1]);
 w('akatsuki spot', AKATSUKI[0], AKATSUKI[1]);
+
+console.log('=== 提灯と頼まれごと（第2次改修）の新設スポット ===');
+for (const [i, kt] of [KIETOURO1, KIETOURO2, KIETOURO3, KIETOURO4].entries()) {
+  w(`kietourou${i + 1} blocked`, kt[0], kt[1], false);
+  w(`light spot ${i + 1}`, kt[0] + 1.3, kt[1]);
+}
+w('catch1 (M1 thicket)', -8.8, M1 + 9.5);
+w('catch2 (M2 thicket)', HOTARU_M2[0] + 1.2, HOTARU_M2[1]);
+w('catch3 (M3 thicket)', HOTARU2[0] + 1.5, HOTARU2[1] + 1);
+w('catch4 (M4 thicket)', HOTARU_M4[0] + 1.5, HOTARU_M4[1]);
+w('mayoibumi spot', KOSATSU[0] + 1.7, KOSATSU[1] - 1);
+w('kumi mizu spot', -5.0, M2 - 5);
+w('jizo mizu spot', JIZO[0] - 1.4, JIZO[1] - 0.2);
+w('kui rope spot', KUI[0], KUI[1] + 1.5);
+w('give hotaru (deck M3)', 0.9, M3 - 1.8);
 
 console.log(fails === 0 ? '\nすべて合格' : `\n*** ${fails} 件の不合格 ***`);
 process.exit(fails === 0 ? 0 : 1);

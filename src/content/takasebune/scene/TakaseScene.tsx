@@ -28,6 +28,12 @@ import {
   KUI,
   YANAGI3,
   TOURO,
+  KIETOURO1,
+  KIETOURO2,
+  KIETOURO3,
+  KIETOURO4,
+  HOTARU_M2,
+  HOTARU_M4,
   BRIDGES,
   KURA_ROW,
 } from '../layout';
@@ -53,6 +59,8 @@ export function TakaseScene() {
       <Willows />
       <Boat />
       <Fireflies />
+      <RiverLanterns />
+      <ErrandDetails />
       <ShoreLights />
     </group>
   );
@@ -401,6 +409,8 @@ function Boat() {
         <Solid x={kx} z={kz} r={0.5} />
         <Character palette={PAL.kisuke} />
       </group>
+      {/* 放した蛍——遠くへは行かず、舟べりに残って明滅する */}
+      {flags.hotaru_kisuke && <FireflyCluster pos={[kx + 0.7, kz + 0.3]} n={4} spread={0.6} />}
       {/* 船頭——歩み板のたもとで、出立の合図を待つ */}
       <group position={[SENDO(mz)[0], 0, SENDO(mz)[1]]} rotation={[0, Math.PI * 0.3, 0]}>
         <Solid x={SENDO(mz)[0]} z={SENDO(mz)[1]} r={0.45} />
@@ -417,19 +427,27 @@ function Boat() {
 }
 
 // ── 蛍（岸の茂みに点滅しながら漂う） ─────────────────────────
-function FireflyCluster({ pos, n = 26 }: { pos: [number, number]; n?: number }) {
+function FireflyCluster({
+  pos,
+  n = 26,
+  spread = 2.6,
+}: {
+  pos: [number, number];
+  n?: number;
+  spread?: number;
+}) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const seeds = useMemo(
     () =>
       Array.from({ length: n }, () => ({
-        r: 0.6 + Math.random() * 2.6,
+        r: 0.6 + Math.random() * spread,
         a: Math.random() * Math.PI * 2,
         h: 0.3 + Math.random() * 1.6,
         sp: 0.3 + Math.random() * 0.5,
         ph: Math.random() * Math.PI * 2,
         bl: 1.2 + Math.random() * 2.0, // 明滅の周期
       })),
-    [n],
+    [n, spread],
   );
   const dummy = useMemo(() => new THREE.Object3D(), []);
   useFrame(({ clock }) => {
@@ -464,6 +482,9 @@ function Fireflies() {
       <FireflyCluster pos={HOTARU1} />
       <FireflyCluster pos={HOTARU2} n={36} />
       <FireflyCluster pos={[TSUKIMI[0] - 2, TSUKIMI[1] + 3]} n={14} />
+      {/* 掬える茂み（M2/M4） */}
+      <FireflyCluster pos={HOTARU_M2} n={12} spread={1.6} />
+      <FireflyCluster pos={HOTARU_M4} n={12} spread={1.6} />
       {/* 川面を渡る少数の蛍 */}
       <FireflyCluster pos={[0, M3 - 10]} n={8} />
     </group>
@@ -495,6 +516,120 @@ function ShoreLights() {
       ))}
       {/* 朧月の照り返し（全体を仄かに持ち上げる） */}
       <pointLight position={[0, 24, 0]} color="#8fa0c0" intensity={3} distance={90} decay={1.8} />
+    </group>
+  );
+}
+
+// ── 火の消えた灯籠（蛍を放すと、蛍いろに灯る） ─────────────────────────
+function KieTourou({ pos, flag }: { pos: [number, number]; flag: string }) {
+  const lit = useGame((s) => !!s.flags[flag]);
+  const fire = useRef<THREE.MeshStandardMaterial>(null);
+  useFrame(({ clock }) => {
+    // 蛍の火は、油の火とちがって明滅する
+    if (fire.current && lit)
+      fire.current.emissiveIntensity = 1.1 + Math.sin(clock.getElapsedTime() * 2.4 + pos[0]) * 0.4;
+  });
+  const [x, z] = pos;
+  return (
+    <group>
+      <mesh castShadow position={[x, 0.35, z]}>
+        <cylinderGeometry args={[0.1, 0.14, 0.7, 10]} />
+        <meshStandardMaterial color="#565b66" roughness={1} />
+      </mesh>
+      <mesh castShadow position={[x, 0.85, z]}>
+        <boxGeometry args={[0.42, 0.34, 0.42]} />
+        <meshStandardMaterial color="#666b76" roughness={1} />
+      </mesh>
+      {/* 火袋——蛍を放すまでは、暗い穴 */}
+      <mesh position={[x, 0.86, z + 0.21]}>
+        <boxGeometry args={[0.16, 0.16, 0.02]} />
+        <meshStandardMaterial
+          ref={fire}
+          color={lit ? '#e6f2c2' : '#1c202a'}
+          emissive={lit ? '#d7eda0' : '#000000'}
+          emissiveIntensity={lit ? 1.1 : 0}
+          roughness={1}
+        />
+      </mesh>
+      <mesh castShadow position={[x, 1.1, z]}>
+        <boxGeometry args={[0.52, 0.12, 0.52]} />
+        <meshStandardMaterial color="#565b66" roughness={1} />
+      </mesh>
+      {lit && (
+        <pointLight position={[x, 0.95, z]} color="#cde98a" intensity={4} distance={8} decay={1.7} />
+      )}
+    </group>
+  );
+}
+
+function RiverLanterns() {
+  return (
+    <group>
+      <KieTourou pos={KIETOURO1} flag="lit1" />
+      <KieTourou pos={KIETOURO2} flag="lit2" />
+      <KieTourou pos={KIETOURO3} flag="lit3" />
+      <KieTourou pos={KIETOURO4} flag="lit4" />
+    </group>
+  );
+}
+
+// ── 頼まれごとの跡（迷い文・椀の水・結び直した綱）——手を入れた岸は、見た目が変わる ──
+function ErrandDetails() {
+  const err1 = useGame((s) => !!s.flags.err1);
+  const err2 = useGame((s) => !!s.flags.err2);
+  const err3 = useGame((s) => !!s.flags.err3);
+  const ropeLen = Math.hypot(4.2, 2);
+  return (
+    <group>
+      {/* 迷い文——拾う前は高札の根本の地面に、挟んだ後は高札の板の端に */}
+      {err1 ? (
+        <mesh position={[KOSATSU[0] - 0.62, 0.86, KOSATSU[1] + 0.07]} rotation={[0, 0, 0.08]}>
+          <planeGeometry args={[0.3, 0.42]} />
+          <meshStandardMaterial color="#ded5bd" roughness={1} side={THREE.DoubleSide} />
+        </mesh>
+      ) : (
+        <mesh
+          position={[KOSATSU[0] + 1.7, 0.02, KOSATSU[1] - 0.9]}
+          rotation={[-Math.PI / 2, 0, 0.5]}
+        >
+          <planeGeometry args={[0.34, 0.46]} />
+          <meshStandardMaterial color="#ded5bd" roughness={1} />
+        </mesh>
+      )}
+      {/* 地蔵の椀に張った水（月を映す） */}
+      {err2 && (
+        <mesh position={[JIZO[0], 0.42, JIZO[1] + 0.3]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.07, 10]} />
+          <meshStandardMaterial
+            color="#9fb6d4"
+            emissive="#7e97b8"
+            emissiveIntensity={0.45}
+            metalness={0.5}
+            roughness={0.25}
+          />
+        </mesh>
+      )}
+      {/* 舫い杭の綱——結び直す前はほどけて垂れ、後は舟へぴんと張る */}
+      {err3 ? (
+        <mesh
+          position={[(KUI[0] - 1.4) / 2, 0.42, KUI[1] + 1]}
+          rotation={[0, -Math.atan2(2, 4.2), -0.05]}
+        >
+          <boxGeometry args={[ropeLen, 0.05, 0.05]} />
+          <meshStandardMaterial color="#8a7a5c" roughness={1} />
+        </mesh>
+      ) : (
+        <group>
+          <mesh position={[KUI[0] + 0.4, 0.3, KUI[1] + 0.35]} rotation={[0.5, -0.4, 0.9]}>
+            <boxGeometry args={[0.05, 0.8, 0.05]} />
+            <meshStandardMaterial color="#8a7a5c" roughness={1} />
+          </mesh>
+          <mesh position={[KUI[0] + 0.7, 0.03, KUI[1] + 0.6]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.14, 0.04, 6, 12]} />
+            <meshStandardMaterial color="#8a7a5c" roughness={1} />
+          </mesh>
+        </group>
+      )}
     </group>
   );
 }

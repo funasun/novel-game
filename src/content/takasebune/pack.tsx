@@ -18,6 +18,12 @@ import {
   TE_HITASU,
   KUI,
   AKATSUKI,
+  KIETOURO1,
+  KIETOURO2,
+  KIETOURO3,
+  KIETOURO4,
+  HOTARU_M2,
+  HOTARU_M4,
 } from './layout';
 
 // Layer 3: 森鷗外『高瀬舟』を「夜の川の対話劇」として翻案。
@@ -42,7 +48,11 @@ export const takasebune: ContentPack = {
     shizukesa: { label: '静けさ', min: 0, max: 100, initial: 10 },
   },
 
-  items: {},
+  // 手に包んで運ぶもの。蛍は熱のない光、水は春のつめたさ。
+  items: {
+    hotaru: { label: '蛍' },
+    mizu: { label: '柄杓の水' },
+  },
 
   characters: {
     kisuke: { name: '喜助', note: '遠島を言い渡された罪人。三十歳ばかり。ふしぎなほど晴れやかな顔をしている。' },
@@ -205,6 +215,73 @@ export const takasebune: ContentPack = {
       ],
       effects: { counters: { quiet_spots: 1 }, params: { shizukesa: 10 }, minutes: 10 },
     },
+
+    // ── 岸の小さな頼まれごと（誰にも頼まれていない用） ──
+    dlg_mayoibumi: {
+      id: 'dlg_mayoibumi',
+      speaker: 'voice',
+      lines: [
+        '（高札の柱の根本に、白いものが落ちている。拾えば、雨に一度濡れて乾いた、たずね人の文だ）',
+        '「おとうと、たずねます。去年の秋より行方知れず。左の眉に傷——」名のところが、にじんで読めない。',
+        '（誰かの兄が、誰かの弟を、まだ探している。わしは文の皺をのばし、風に飛ばぬよう、高札の板の端に挟み込んだ）',
+        '（喜助の弟は、もう誰にも探されない。そのことが、ふいに喉の奥で鳴った）',
+      ],
+      effects: {
+        counters: { errands: 1 },
+        params: { toi: 4, shizukesa: 4 },
+        flags: ['err1'],
+        minutes: 10,
+      },
+    },
+    dlg_jizo_mizu: {
+      id: 'dlg_jizo_mizu',
+      speaker: 'voice',
+      lines: [
+        '（柄杓の水を、地蔵の前の椀にそそぐ。乾いた石の椀が、月を映すほどに満ちる）',
+        '（誰が始めた習わしかは知らない。だが、椀が満ちているだけで、辻はもう寂しくない）',
+        '（水は、島へ行く者の分も、手向けておいた）',
+      ],
+      effects: {
+        items: { mizu: -1 },
+        counters: { errands: 1 },
+        params: { shizukesa: 6 },
+        flags: ['err2'],
+        minutes: 10,
+      },
+    },
+    dlg_kui_rope: {
+      id: 'dlg_kui_rope',
+      speaker: 'voice',
+      lines: [
+        '（舫い杭の綱が、緩んでいる。夜のうちに擦り切れれば、朝の川で誰かが難儀するだろう）',
+        '（袖をまくり、綱を張り直し、結び目を作り直す。役目柄、結びだけは手が覚えている）',
+        '（振り向くと、船頭がこちらを見ていた。何も言わず、小さく頭を下げた）',
+      ],
+      effects: {
+        counters: { errands: 1 },
+        params: { shizukesa: 5 },
+        flags: ['err3'],
+        minutes: 10,
+      },
+    },
+
+    // ── 掌の蛍を、喜助に（弟の告白のあとでだけ、意味を持つ） ──
+    dlg_hotaru_kisuke: {
+      id: 'dlg_hotaru_kisuke',
+      speaker: 'kisuke',
+      lines: [
+        '……おや。お役人様、それは——蛍で、ございますか。',
+        '弟が達者だったころ、西陣からの帰り道に、二人でよう掬いました。手の中で灯りますのを、弟は「銭の要らぬ提灯や」と申しまして。',
+        '（喜助は掌の蛍をしばらく見つめ、それから、そっと夜へ放した。光は遠くへは行かず、二つ三つ、舟べりに残って明滅している）',
+        '……ありがとうございます。よい供養に、なりましてございます。',
+      ],
+      effects: {
+        items: { hotaru: -1 },
+        params: { shizukesa: 6, toi: -3 },
+        flags: ['hotaru_kisuke'],
+        minutes: 10,
+      },
+    },
   },
 
   quests: {
@@ -277,6 +354,24 @@ export const takasebune: ContentPack = {
       goal: { type: 'counter', counter: 'landmarks_found', count: 4 },
       side: true,
     },
+    sq_tourou: {
+      id: 'sq_tourou',
+      title: '流れ灯',
+      description:
+        '川筋の灯籠は、なぜか片方ずつ火が消えている。岸の茂みの蛍をそっと掬い、火袋に放して、四つの灯をともし直す。（掬った茂みの蛍も、しばらくすれば戻ってくる）',
+      goal: { type: 'counter', counter: 'lanterns_lit', count: 4 },
+      waypoint: [KIETOURO1[0] + 1.3, KIETOURO1[1]],
+      side: true,
+    },
+    sq_errands: {
+      id: 'sq_errands',
+      title: '岸の小さな用',
+      description:
+        '舫いの岸には、誰の役目でもない小さな用が残っている。高札の下の迷い文。地蔵の乾いた椀。杭の緩んだ綱。——見つけたら、しておく。',
+      goal: { type: 'counter', counter: 'errands', count: 3 },
+      waypoint: [KOSATSU[0] + 1.7, KOSATSU[1] - 1],
+      side: true,
+    },
   },
 
   events: [
@@ -297,7 +392,7 @@ export const takasebune: ContentPack = {
         {
           type: 'effects',
           effects: {
-            questAdd: ['q_ch1', 'sq_quiet', 'sq_walk'],
+            questAdd: ['q_ch1', 'sq_quiet', 'sq_walk', 'sq_tourou', 'sq_errands'],
             learning: ['l_takasebune', 'l_doshin'],
           },
         },
@@ -313,6 +408,8 @@ export const takasebune: ContentPack = {
           type: 'narration',
           lines: [
             '船頭は舫い綱に手をかけたまま、急かすふうもなく夜空を仰いでいる。（岸を歩くなら、今のうちだ。発つときは、歩み板のたもとの船頭に告げればよい）',
+            '（見れば、岸の灯籠がひとつ、火が消えたままだ。……すぐそこの茂みでは、蛍が明滅しているのだが）',
+            '（高札の根本にも、何か白い紙のようなものが落ちている）',
           ],
         },
         { type: 'effects', effects: { questAdd: ['q_dep1'] } },
@@ -326,6 +423,7 @@ export const takasebune: ContentPack = {
           type: 'narration',
           lines: [
             '船頭は煙管を一服つけて、まだ舫いを解かずにいる。（蔵の岸を見て回るなら、今のうちだ）',
+            '煙を吐きながら、船頭がぽつりと言う。「地蔵さんの椀が、干上がっとりますな。……柄杓なら、岸っぷちに挿してござる」',
           ],
         },
         { type: 'effects', effects: { questAdd: ['q_dep2'] } },
@@ -353,7 +451,7 @@ export const takasebune: ContentPack = {
           lines: [
             '船頭が舫いを解いた。舟は音もなく岸を離れ、黒い水の上をすべってゆく。',
             '「島がありがたい」という男。世間の考えとあべこべの、その晴れやかさが、わしの胸に小さな棘のように残った。',
-            '——次の舫いは、白壁の蔵のならぶ岸だ。',
+            '——次の舫いは、白壁の蔵のならぶ岸だ。着いた岸には対の石灯籠が並んで、なぜか片方だけ、火が入っていた。',
           ],
         },
         {
@@ -399,7 +497,7 @@ export const takasebune: ContentPack = {
           lines: [
             '喜助は話し終えると、少し痩せた肩を落として、それでもどこか、肩の荷を下ろしたような顔で水の面を見ていた。',
             '殺したのは、罪である。だが、苦しみから救うためであった。——罪とは何か。掟とは何か。問いは答えを連れて来ず、櫓の音だけが規則正しく夜を刻む。',
-            '——舟は最後の舫いへ。伏見に着けば、夜が明ける。',
+            '——舟は最後の舫いへ。伏見に着けば、夜が明ける。着いた岸は、舫い杭の綱の結びが甘く、灯籠の火もまた消えていた。今夜、最後の岸だ。',
           ],
         },
         {
@@ -413,6 +511,7 @@ export const takasebune: ContentPack = {
         },
       ],
     },
+    // ── 結末。独白の色は、ひと晩の 問い/静けさ の満ち方が決める ──
     {
       id: 'ev_end',
       trigger: { type: 'flag', flag: 'k4_done' },
@@ -421,19 +520,75 @@ export const takasebune: ContentPack = {
           type: 'narration',
           lines: [
             '伏見の舫いが解かれた。舟は淀川へ——大阪へ向かう。',
-            '喜助は舳先の提灯のそばに座り、二百文の入った懐へ、そっと手を当てた。わしは艫に立ち、答えの出ない問いを、風呂敷のように畳んで胸にしまった。',
+            '喜助は舳先の提灯のそばに座り、二百文の入った懐へ、そっと手を当てた。',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['end_ready'] } },
+      ],
+    },
+    // 問いが深く積もった夜だけ、独白の前にひとこと差し挟まれる
+    {
+      id: 'ev_toi_nokoru',
+      trigger: { type: 'param', param: 'toi', gte: 50, requiresFlag: 'end_ready' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '（……それでも、答えは出なかった。オオトリテエに預けた、そのあとも）',
+            '（いつかまた、この問いに出会うのだろう。医の庭でも、法の庭でも、あるいはもっと身近な、誰かの枕辺でも——喜助の晴れやかな顔と、一緒に）',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['toi_lingers'] } },
+      ],
+    },
+    // 澄んだ夜（静けさ70以上）——岸で過ごした夜が、問いの置きどころをくれる
+    {
+      id: 'ev_end_sumu',
+      trigger: { type: 'param', param: 'shizukesa', gte: 70, requiresFlag: 'end_ready' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
             '次第に更けてゆく朧夜に、沈黙の人ふたりを乗せた高瀬舟は、黒い水の面をすべっていった。',
+            'ふと振り返れば、下ってきた川筋に、岸の灯が点々と浮かんでいる。今夜、足を止めた岸のひとつひとつが、遠ざかりながら光っている。',
+            '答えの出ない問いは、そのままだ。だが、問いを抱えたまま静かでいられる夜が、あることを知った。',
             '——完——',
           ],
         },
+        { type: 'effects', effects: { flags: ['ending'], learning: ['l_ogai'] } },
+      ],
+    },
+    // なかほどの夜（40-69）——問いを畳んでしまうが、畳み目はほどけそうである
+    {
+      id: 'ev_end_naka',
+      trigger: { type: 'param', param: 'shizukesa', gte: 40, lte: 69, requiresFlag: 'end_ready' },
+      steps: [
         {
-          type: 'effects',
-          effects: {
-            flags: ['ending'],
-            params: { shizukesa: 12 },
-            learning: ['l_ogai'],
-          },
+          type: 'narration',
+          lines: [
+            '次第に更けてゆく朧夜に、沈黙の人ふたりを乗せた高瀬舟は、黒い水の面をすべっていった。',
+            'わしは艫に立ち、答えの出ない問いを、風呂敷のように畳んで胸にしまった。畳み目は、まだ少し、ほどけそうである。',
+            '——完——',
+          ],
         },
+        { type: 'effects', effects: { flags: ['ending'], learning: ['l_ogai'] } },
+      ],
+    },
+    // 岸を知らぬ夜（39以下）——静けさは、向こうからは来ない
+    {
+      id: 'ev_end_yami',
+      trigger: { type: 'param', param: 'shizukesa', lte: 39, requiresFlag: 'end_ready' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '次第に更けてゆく朧夜に、沈黙の人ふたりを乗せた高瀬舟は、黒い水の面をすべっていった。',
+            '思えば今夜、わしは岸に降りた覚えがほとんどない。蛍も、地蔵も、月見の州も、みな舟の上から流れて過ぎた。問いだけが、手つかずのまま重い。',
+            '（岸の夜を知らぬまま、川を下り切ってしまった。——静けさは、向こうからは来ないのだ）',
+            '——完——',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['ending', 'end_dark'], learning: ['l_ogai'] } },
       ],
     },
     {
@@ -462,6 +617,34 @@ export const takasebune: ContentPack = {
           ],
         },
         { type: 'effects', effects: { params: { shizukesa: 5 } } },
+      ],
+    },
+    {
+      id: 'ev_tourou',
+      trigger: { type: 'questComplete', quest: 'sq_tourou' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '（四つ目の火袋に、蛍がおさまった。振り返れば、下ってきた川筋に——蛍いろの灯が、点々と四つ）',
+            '（石の灯籠は、舟人のための小さな灯台だ。今夜ともした火は、朝までは保つまい。それでも、今夜この川を下る誰かの目には、届く）',
+          ],
+        },
+        { type: 'effects', effects: { params: { shizukesa: 8 }, learning: ['l_tourou'] } },
+      ],
+    },
+    {
+      id: 'ev_errands',
+      trigger: { type: 'questComplete', quest: 'sq_errands' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '（文を挟み、水を張り、綱を結んだ。どれも、誰に頼まれたのでもない小さな用だ）',
+            '（喜助の言う「足りている」が、ほんの少し、手のひらから分かった気がする。銭にならぬ用を足した夜は、妙に懐があたたかい）',
+          ],
+        },
+        { type: 'effects', effects: { params: { shizukesa: 6, toi: 2 } } },
       ],
     },
   ],
@@ -508,6 +691,12 @@ export const takasebune: ContentPack = {
       title: '朧月',
       body: '春の夜、水蒸気をふくんだ大気に月がかすんで見えるのが朧月。輪郭のにじんだ柔らかな光は春の季語で、桜の散った後の夜にいちばん似合う。鷗外は物語の幕切れを、この朧夜の川面に置いた。',
       tags: ['自然', '季語'],
+    },
+    l_tourou: {
+      id: 'l_tourou',
+      title: '川端の灯籠と常夜灯',
+      body: '川べりの石灯籠は、舟人のための小さな灯台だった。高瀬川筋には夜どおし火をともす常夜灯が置かれ、火の入れ替えは岸の町の役目。火袋の灯ひとつで、夜の川は「怖い道」から「帰り道」へ変わる。盆に死者の魂を送る灯籠流しも、川と灯のこうした縁から生まれた習わしである。',
+      tags: ['暮らし', '灯'],
     },
     l_yutanajii: {
       id: 'l_yutanajii',
@@ -676,6 +865,149 @@ export const takasebune: ContentPack = {
       radius: 2.0,
       once: true,
       effects: { dialogue: 'dlg_akatsuki' },
+    },
+
+    // ── 蛍の茂み（掬える資源。掬ってもしばらくすれば茂みに戻る） ──
+    {
+      id: 'catch1',
+      position: [HOTARU1[0] - 1.8, HOTARU1[1] + 1],
+      prompt: '茂みの蛍を、掌でそっと掬う',
+      radius: 1.8,
+      cooldownHours: 0.5,
+      effects: { items: { hotaru: 1 }, minutes: 10 },
+    },
+    {
+      id: 'catch2',
+      position: [HOTARU_M2[0] + 1.2, HOTARU_M2[1]],
+      prompt: '柳かげの蛍を、掌でそっと掬う',
+      radius: 1.8,
+      cooldownHours: 0.5,
+      effects: { items: { hotaru: 1 }, minutes: 10 },
+    },
+    {
+      id: 'catch3',
+      position: [HOTARU2[0] + 1.5, HOTARU2[1] + 1],
+      prompt: '乱舞の端の蛍を、掌でそっと掬う',
+      radius: 1.8,
+      cooldownHours: 0.5,
+      effects: { items: { hotaru: 1 }, minutes: 10 },
+    },
+    {
+      id: 'catch4',
+      position: [HOTARU_M4[0] + 1.5, HOTARU_M4[1]],
+      prompt: '岸の草むらの蛍を、掌でそっと掬う',
+      radius: 1.8,
+      cooldownHours: 0.5,
+      effects: { items: { hotaru: 1 }, minutes: 10 },
+    },
+
+    // ── 火の消えた灯籠（蛍を持っているときだけ「灯せる」が現れる） ──
+    {
+      id: 'light_tourou1',
+      position: [KIETOURO1[0] + 1.3, KIETOURO1[1]],
+      prompt: '消えた灯籠の火袋に、蛍を放す',
+      radius: 1.6,
+      once: true,
+      requiresItems: { hotaru: 1 },
+      effects: {
+        items: { hotaru: -1 },
+        flags: ['lit1'],
+        counters: { lanterns_lit: 1 },
+        params: { shizukesa: 6 },
+        minutes: 5,
+      },
+    },
+    {
+      id: 'light_tourou2',
+      position: [KIETOURO2[0] + 1.3, KIETOURO2[1]],
+      prompt: '対のかたわれの火袋に、蛍を放す',
+      radius: 1.6,
+      once: true,
+      requiresItems: { hotaru: 1 },
+      effects: {
+        items: { hotaru: -1 },
+        flags: ['lit2'],
+        counters: { lanterns_lit: 1 },
+        params: { shizukesa: 6 },
+        minutes: 5,
+      },
+    },
+    {
+      id: 'light_tourou3',
+      position: [KIETOURO3[0] + 1.3, KIETOURO3[1]],
+      prompt: '消えた灯籠の火袋に、蛍を放す',
+      radius: 1.6,
+      once: true,
+      requiresItems: { hotaru: 1 },
+      effects: {
+        items: { hotaru: -1 },
+        flags: ['lit3'],
+        counters: { lanterns_lit: 1 },
+        params: { shizukesa: 6 },
+        minutes: 5,
+      },
+    },
+    {
+      id: 'light_tourou4',
+      position: [KIETOURO4[0] + 1.3, KIETOURO4[1]],
+      prompt: '消えた灯籠の火袋に、蛍を放す',
+      radius: 1.6,
+      once: true,
+      requiresItems: { hotaru: 1 },
+      effects: {
+        items: { hotaru: -1 },
+        flags: ['lit4'],
+        counters: { lanterns_lit: 1 },
+        params: { shizukesa: 6 },
+        minutes: 5,
+      },
+    },
+
+    // ── 掌の蛍を喜助に（弟の告白のあと、蛍を持って舟に戻ると） ──
+    {
+      id: 'give_hotaru',
+      position: [0.9, M3 - 1.8],
+      prompt: '掌の蛍を、喜助に見せてやる',
+      radius: 1.4,
+      once: true,
+      requiresFlag: 'k3_done',
+      requiresItems: { hotaru: 1 },
+      effects: { dialogue: 'dlg_hotaru_kisuke' },
+    },
+
+    // ── 岸の小さな用（誰の役目でもない頼まれごと） ──
+    {
+      id: 'err_mayoibumi',
+      position: [KOSATSU[0] + 1.7, KOSATSU[1] - 1],
+      prompt: '高札の根本の、白い紙を拾う',
+      radius: 1.6,
+      once: true,
+      effects: { dialogue: 'dlg_mayoibumi' },
+    },
+    {
+      id: 'kumi_mizu',
+      position: [-5.0, M2 - 5],
+      prompt: '岸っぷちの柄杓で、川の水を汲む',
+      radius: 1.5,
+      once: true,
+      effects: { items: { mizu: 1 }, minutes: 5 },
+    },
+    {
+      id: 'err_jizo_mizu',
+      position: [JIZO[0] - 1.4, JIZO[1] - 0.2],
+      prompt: '地蔵の乾いた椀に、水をそそぐ',
+      radius: 1.5,
+      once: true,
+      requiresItems: { mizu: 1 },
+      effects: { dialogue: 'dlg_jizo_mizu' },
+    },
+    {
+      id: 'err_kui',
+      position: [KUI[0], KUI[1] + 1.5],
+      prompt: '緩んだ舫い綱を、結び直す',
+      radius: 1.5,
+      once: true,
+      effects: { dialogue: 'dlg_kui_rope' },
     },
   ],
 
