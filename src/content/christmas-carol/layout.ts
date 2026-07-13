@@ -101,6 +101,13 @@ export const FOLK_POS = {
   beggar: [-24.6, 0.4] as [number, number], // 教会わきの物乞い
 };
 
+// 期日の借り手たちの戸口（クリスマスの朝の取り立て/猶予）
+export const DEBTOR_POS = {
+  husband: [-11, -8] as [number, number], // キャロラインの夫（街の家5の東の戸口）
+  widow: [5, 22] as [number, number], // 仕立て物の寡婦（街の家6の西の戸口）
+  clockmaker: [24.8, -12] as [number, number], // 若い時計職人（街の家7の西の戸口）
+};
+
 const inRect = (r: readonly [number, number, number, number], x: number, z: number) =>
   x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3];
 

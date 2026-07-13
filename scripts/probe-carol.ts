@@ -20,6 +20,7 @@ import {
   DIM_SPOT,
   GRAVE_SPOT,
   FOLK_POS,
+  DEBTOR_POS,
 } from '../src/content/christmas-carol/layout';
 
 let fails = 0;
@@ -95,6 +96,21 @@ w('cq5 market', 16.5, 11.8);
 w('cq6 past tree', -122, 14.5);
 w('cq7 future grave', 126, 13.4);
 for (const [k, [x, z]] of Object.entries(FOLK_POS)) w('folk ' + k, x, z);
+
+console.log('=== 善意の経済（第2次改修）の新設スポット ===');
+w('debtor husband', DEBTOR_POS.husband[0], DEBTOR_POS.husband[1]);
+w('debtor widow', DEBTOR_POS.widow[0], DEBTOR_POS.widow[1]);
+w('debtor clockmaker', DEBTOR_POS.clockmaker[0], DEBTOR_POS.clockmaker[1]);
+w('house5 inside', -14, -8, false);
+w('house6 inside', 8, 22, false);
+w('house7 inside', 28, -12, false);
+w('give_carolboy', 3.2, 5.4);
+w('give_goose', 14.8, 7.7);
+w('give_oven', 15.2, 15);
+w('bakery inside', 18, 15, false);
+w('husband figure spot', -11, -6.6);
+w('widow figure spot', 5, 23.5);
+w('clock figure spot', 24.8, -10.5);
 
 console.log(fails === 0 ? '\nすべて合格' : `\n*** ${fails} 件の不合格 ***`);
 process.exit(fails === 0 ? 0 : 1);

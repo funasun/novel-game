@@ -32,6 +32,7 @@ import {
   GRAVE,
   GRAVE_SPOT,
   FOLK_POS,
+  DEBTOR_POS,
 } from './layout';
 
 // Layer 3: ディケンズ『クリスマス・キャロル』を「心の再生ゲーム」として翻案。
@@ -73,6 +74,9 @@ export const christmasCarol: ContentPack = {
     chestnutman: { name: '焼き栗売り', note: '火鉢の炭で栗を焼く。寒い街角のちいさな暖炉。' },
     carolboy: { name: '聖歌の子', note: '戸口でクリスマス・キャロルを歌って小銭をもらう子ども。' },
     tim: { name: 'タイニー・ティム', note: 'ボブの末息子。松葉杖の小さな体に、だれより大きな祝福を宿す。' },
+    caroline_h: { name: 'キャロラインの夫', note: 'スクルージから金を借りた男。病んだ妻と子どもたちを抱え、今日が返済の期日。' },
+    widow: { name: '仕立て物の寡婦', note: '針仕事で暮らす未亡人。夫の葬式代を、スクルージの帳簿から借りた。' },
+    clockmaker: { name: '若い時計職人', note: '道具ひとそろいを借金で買い、看板のない店を持ったばかりの職人。' },
     voice: { name: '声', note: '' },
   },
 
@@ -240,7 +244,7 @@ export const christmasCarol: ContentPack = {
         '……精霊よ、ティムは、生きられるのか。',
         '「未来が変わらなければ、暖炉の隅に、持ち主のいない松葉杖が残るだろう」',
       ],
-      effects: { counters: { present_scenes: 1 }, minutes: 30, params: { warmth: 8, remorse: 8 }, learning: ['l_tim_crutch'] },
+      effects: { counters: { present_scenes: 1 }, minutes: 30, params: { warmth: 6, remorse: 8 }, learning: ['l_tim_crutch'] },
     },
     dlg_fredwin: {
       id: 'dlg_fredwin',
@@ -250,7 +254,7 @@ export const christmasCarol: ContentPack = {
         '「伯父さんの不機嫌で損をするのは、いつも伯父さん自身なんだ。僕は毎年誘うよ。あきらめない」',
         '（笑われている。なのに——なぜだろう、その笑い声が、あたたかい）',
       ],
-      effects: { counters: { present_scenes: 1 }, minutes: 30, params: { warmth: 6, remorse: 4 }, learning: ['l_fred_game'] },
+      effects: { counters: { present_scenes: 1 }, minutes: 30, params: { warmth: 4, remorse: 4 }, learning: ['l_fred_game'] },
     },
     dlg_iw: {
       id: 'dlg_iw',
@@ -335,24 +339,55 @@ export const christmasCarol: ContentPack = {
       effects: {
         counters: { good_deeds: 1 },
         minutes: 30,
-        params: { coins: -8, warmth: 10, remorse: -6 },
+        params: { coins: -8, warmth: 7, remorse: -6 },
         flags: ['turkey_sent'],
         learning: ['l_turkey'],
       },
     },
+    // 寄付の額は選べる。上乗せは金貨35枚——取り立てなしでは届かない「憧れの選択肢」。
     dlg_deed_charity: {
       id: 'dlg_deed_charity',
       speaker: 'charity',
       lines: [
         'おや、あなたは昨日の……ス、スクルージ様？',
-        '（耳打ちする。滞納ぶんも上乗せした額を。紳士は帳面を二度見た）',
-        'そ、それはまた……ご冗談でしょう？　——本気ですと！？　神のお恵みを！　メリー・クリスマス！',
+        '（紳士が、おそるおそる帳面をひらく。さて——いくら書かせよう）',
       ],
-      effects: {
-        counters: { good_deeds: 1 },
-        minutes: 20,
-        params: { coins: -15, warmth: 8, remorse: -8 },
-      },
+      choices: [
+        {
+          text: '「約束の額を。……昨日の非礼の詫びも、込みで」（金貨15枚）',
+          effects: {
+            next: 'dlg_charity_plain',
+            counters: { good_deeds: 1 },
+            minutes: 20,
+            params: { coins: -15, warmth: 5, remorse: -6 },
+          },
+        },
+        {
+          text: '「滞納の年月ぶんに、利子をつけて」（金貨35枚）',
+          requiresParam: { param: 'coins', gte: 35 },
+          effects: {
+            next: 'dlg_charity_upsell',
+            counters: { good_deeds: 1 },
+            minutes: 20,
+            params: { coins: -35, warmth: 12, remorse: -14 },
+          },
+        },
+      ],
+    },
+    dlg_charity_plain: {
+      id: 'dlg_charity_plain',
+      speaker: 'charity',
+      lines: [
+        '（耳打ちされた額に、紳士は目を見開いた）それは……ご立派な額です！　神のお恵みを！　メリー・クリスマス！',
+      ],
+    },
+    dlg_charity_upsell: {
+      id: 'dlg_charity_upsell',
+      speaker: 'charity',
+      lines: [
+        '（耳打ちされた額に、紳士は帳面を二度見した）そ、それはまた……ご冗談でしょう？',
+        '——本気ですと！？　これだけあれば、石炭と食事が、ひと冬まるごと……！　神のお恵みを！　メリー・クリスマス！',
+      ],
     },
     dlg_deed_fred: {
       id: 'dlg_deed_fred',
@@ -365,7 +400,7 @@ export const christmasCarol: ContentPack = {
       effects: {
         counters: { good_deeds: 1 },
         minutes: 120,
-        params: { warmth: 10, remorse: -6 },
+        params: { warmth: 7, remorse: -6 },
         flags: ['fred_visited'],
       },
     },
@@ -381,10 +416,187 @@ export const christmasCarol: ContentPack = {
       effects: {
         counters: { good_deeds: 1 },
         minutes: 60,
-        params: { coins: -5, warmth: 12, remorse: -8 },
+        params: { coins: -5, warmth: 8, remorse: -8 },
         flags: ['bob_raised'],
         learning: ['l_victorian_poor'],
       },
+    },
+
+    // ── 期日の帳簿——三人の借り手（取り立てるか、猶予するか） ──
+    dlg_debt_husband: {
+      id: 'dlg_debt_husband',
+      speaker: 'caroline_h',
+      lines: [
+        '（扉を叩くと、青ざめた男が出てきた。奥の寝台に、咳き込む女の影——妻のキャロラインだ）',
+        'ス、スクルージさん……期日は、承知しています。ですが妻が、この寒さで臥せっていて……',
+        '半分なら。半分なら、今日お渡しできます。残りは、年明けまで待っていただけませんか。',
+      ],
+      choices: [
+        {
+          text: '「期日は期日だ。全額、耳をそろえて払え」',
+          effects: {
+            next: 'dlg_collected',
+            counters: { debts_settled: 1 },
+            flags: ['debt1_done'],
+            minutes: 30,
+            params: { coins: 10, warmth: -6, remorse: 6 },
+          },
+        },
+        {
+          text: '「……年明けでいい。利子は、今年のぶんは忘れる」',
+          effects: {
+            next: 'dlg_forgiven',
+            counters: { debts_settled: 1 },
+            flags: ['debt1_done'],
+            minutes: 30,
+            params: { warmth: 8, remorse: -4 },
+          },
+        },
+      ],
+    },
+    dlg_debt_widow: {
+      id: 'dlg_debt_widow',
+      speaker: 'widow',
+      lines: [
+        '（針仕事の手を止めて、寡婦が立ち上がる。狭い部屋に、子どもの継ぎだらけの服が干してある）',
+        '夫の葬式の借りですね。……ええ、覚えております。忘れた日は、ございません。',
+        '今日のぶんに、これを。（差し出された銀貨は、数えるまでもなく足りない）',
+      ],
+      choices: [
+        {
+          text: '「足りない。あるだけ置いて、残りは来週だ」',
+          effects: {
+            next: 'dlg_collected',
+            counters: { debts_settled: 1 },
+            flags: ['debt2_done'],
+            minutes: 30,
+            params: { coins: 10, warmth: -6, remorse: 6 },
+          },
+        },
+        {
+          text: '「……葬式の借りだ。今日で、帳消しにする」',
+          effects: {
+            next: 'dlg_forgiven',
+            counters: { debts_settled: 1 },
+            flags: ['debt2_done'],
+            minutes: 30,
+            params: { warmth: 8, remorse: -4 },
+          },
+        },
+      ],
+    },
+    dlg_debt_clock: {
+      id: 'dlg_debt_clock',
+      speaker: 'clockmaker',
+      lines: [
+        '（小さな仕事場。壁いっぱいの歯車と、まだ看板の出ていない店先）',
+        '道具代の期日ですね。払えます——この掛け時計に、今日買い手が来てくれれば。',
+        '来なければ、道具を質に入れます。……そうしたら、わたしは何で稼げばいいんでしょうね。',
+      ],
+      choices: [
+        {
+          text: '「商売と情は別だ。道具を質に入れて払え」',
+          effects: {
+            next: 'dlg_collected',
+            counters: { debts_settled: 1 },
+            flags: ['debt3_done'],
+            minutes: 30,
+            params: { coins: 10, warmth: -6, remorse: 6 },
+          },
+        },
+        {
+          text: '「時計が売れてからでいい。……その看板、早く出せ」',
+          effects: {
+            next: 'dlg_forgiven',
+            counters: { debts_settled: 1 },
+            flags: ['debt3_done'],
+            minutes: 30,
+            params: { warmth: 8, remorse: -4 },
+          },
+        },
+      ],
+    },
+    dlg_collected: {
+      id: 'dlg_collected',
+      speaker: 'voice',
+      lines: [
+        '（数えた金貨は、確かに重い。だが袋に落ちるその音が、今朝はやけに——冷たく響く）',
+      ],
+    },
+    dlg_forgiven: {
+      id: 'dlg_forgiven',
+      speaker: 'voice',
+      lines: [
+        '（借用書に、太い線を引く。顔を上げた相手の目に、朝の光が差していた）',
+        '（金貨は一枚も増えない。なのに、どうしてこんなに——軽いんだ、足が）',
+      ],
+    },
+
+    // ── 朝の施し（善意の経済——全部は買えない） ──
+    dlg_give_carolboy: {
+      id: 'dlg_give_carolboy',
+      speaker: 'carolboy',
+      lines: [
+        '（広場の隅で、聖歌の子がまた歌っている。今朝の歌は、ゆうべより高く、よく通る）',
+        'あっ——きのうの旦那。……今日は、最後まで聞いてくれる？',
+      ],
+      choices: [
+        {
+          text: '「（金貨を三枚、その手に握らせる）最後までどころか、二番も聞こう」',
+          requiresParam: { param: 'coins', gte: 3 },
+          effects: { minutes: 20, params: { coins: -3, warmth: 5 } },
+        },
+        {
+          text: '「（帽子を持ち上げ、歌に一礼して通り過ぎる）」',
+          effects: { minutes: 10, params: { warmth: 1 } },
+        },
+      ],
+    },
+    dlg_goose: {
+      id: 'dlg_goose',
+      speaker: 'poulterer',
+      lines: [
+        '朝から旦那、豪勢に使いますねえ！　……で、今度は何を？',
+        '（店先には売れ残りの鵞鳥が数羽。パン屋の竈へ向かう行列には、手ぶらの家族もいる）',
+      ],
+      choices: [
+        {
+          text: '「鵞鳥を一羽。あの行列の、いちばん小さな皿の家に」（金貨4枚）',
+          effects: { next: 'dlg_goose_one', minutes: 20, params: { coins: -4, warmth: 4 } },
+        },
+        {
+          text: '「売れ残りを全部だ。皿のない者に、片端から配れ」（金貨20枚）',
+          requiresParam: { param: 'coins', gte: 20 },
+          effects: {
+            next: 'dlg_goose_all',
+            minutes: 40,
+            params: { coins: -20, warmth: 12, remorse: -6 },
+          },
+        },
+      ],
+    },
+    dlg_goose_one: {
+      id: 'dlg_goose_one',
+      speaker: 'voice',
+      lines: ['（皿に鵞鳥がのった瞬間の、あの家族の顔。……安い買い物だ、まったく）'],
+    },
+    dlg_goose_all: {
+      id: 'dlg_goose_all',
+      speaker: 'voice',
+      lines: [
+        '「全部!?」——鶏肉屋の声が裏返る。通りが、いっせいにこちらを見る。',
+        '（配られる鳥。増えてゆく歓声。だれかが「あれはスクルージだ」とささやき、だれかが「まさか」と笑った。……まさか、だ。わたしにも、まだ信じられん）',
+      ],
+    },
+    dlg_oven: {
+      id: 'dlg_oven',
+      speaker: 'voice',
+      lines: [
+        '（パン屋の竈の前に、鳥の皿を抱えた行列。焼き賃の小銭を、家族ごとに数えて払っている）',
+        '「今日の竈代は、この先ぜんぶ、わたしが持つ」——言った瞬間の、行列のどよめきときたら。',
+        '（パン屋は目を白黒させ、それから竈より熱い声で言った。「メリー・クリスマス、旦那！」）',
+      ],
+      effects: { minutes: 30, params: { coins: -6, warmth: 6, remorse: -2 } },
     },
 
     // ── 町の人との言葉 ──
@@ -491,6 +703,15 @@ export const christmasCarol: ContentPack = {
       description: '生きて朝に帰ってきた。凍った心を溶かす行いを五つ——七面鳥・寄付・教会・フレッドの家・そしてボブの給料。',
       goal: { type: 'counter', counter: 'good_deeds', count: 5 },
       waypoint: [13, 7.6],
+    },
+    sq_debts: {
+      id: 'sq_debts',
+      title: '期日の帳簿',
+      description:
+        '今日が期日の借り手が三人——キャロラインの夫・仕立て物の寡婦・若い時計職人。取り立てるか、猶予するか。帳簿の線の引き方が、朝の温度を決める。',
+      goal: { type: 'counter', counter: 'debts_settled', count: 3 },
+      waypoint: DEBTOR_POS.husband,
+      side: true,
     },
     sq_snowfolk: {
       id: 'sq_snowfolk',
@@ -619,15 +840,16 @@ export const christmasCarol: ContentPack = {
             '生きている。時間はある。やり直せる！',
             '窓を開けると、霧のない、澄んだ金色の朝。教会の鐘がいっせいに鳴っている。通りの少年に叫んで訊いた——「today！　今日は何の日だ！」「クリスマスですよ、旦那！」',
             '精霊たちは、ひと晩でやってくれたのだ。笑いながら涙が出る。さあ——やることが山ほどある！',
+            '（……そういえば、机の帳簿。今日が期日の借り手が、三人いる。取り立てるのは正当な権利だ。——権利、か）',
           ],
         },
         {
           type: 'effects',
           effects: {
             flags: ['christmas_morning'],
-            questAdd: ['q_redemption'],
+            questAdd: ['q_redemption', 'sq_debts'],
             teleport: [-12.4, -23],
-            params: { warmth: 20, remorse: -10 },
+            params: { warmth: 8, remorse: -10 },
             learning: ['l_christmas_revival'],
           },
         },
@@ -640,6 +862,21 @@ export const christmasCarol: ContentPack = {
         {
           type: 'narration',
           lines: [
+            '五つの行いを終えた。日が傾き、教会の鐘が夕べの時を打つ。',
+            'ひと晩と、一日。長い長い時間だった。……さて、この朝からのわたしを、街はどう見ただろうか。',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['end_ready'] } },
+      ],
+    },
+    // 結末は「行いの数」ではなく「心の温度」で分かれる——温もりの残高が、朝の物語を決める。
+    {
+      id: 'ev_end_gold',
+      trigger: { type: 'param', param: 'warmth', gte: 90, requiresFlag: 'end_ready' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
             'スクルージは、言葉のとおりの男になった。いや、それ以上の男に。',
             'タイニー・ティムは死ななかった。スクルージはティムの第二の父になった。',
             '古い街の善き人として、笑われることもあったが、本人が誰より愉快に笑ったので、それで勘定は合った。',
@@ -648,7 +885,84 @@ export const christmasCarol: ContentPack = {
             '「神さまの祝福が、みんなの上にありますように！」',
           ],
         },
-        { type: 'effects', effects: { flags: ['ending'], params: { warmth: 15 }, learning: ['l_tiny_tim'] } },
+        { type: 'effects', effects: { flags: ['ending'], learning: ['l_tiny_tim'] } },
+      ],
+    },
+    {
+      id: 'ev_end_silver',
+      trigger: { type: 'param', param: 'warmth', gte: 60, lte: 89, requiresFlag: 'end_ready' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            'スクルージは変わった、と街の人々は言う。——半分は、まだ疑いながら。',
+            'それでいい。信用とは帳簿と同じで、一日では書き上がらない。',
+            'ティムの松葉杖の音は、今日も路地に響いている。次の冬をどう越すかは、これからのスクルージの行い次第だ。',
+            'だが少なくとも今夜、クラチット家の暖炉は大きく燃え、フレッドの食卓には笑い声が絶えなかった。',
+            '始まりとしては——悪くない。',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['ending'], learning: ['l_tiny_tim'] } },
+      ],
+    },
+    {
+      id: 'ev_end_gray',
+      trigger: { type: 'param', param: 'warmth', lte: 59, requiresFlag: 'end_ready' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '五つの行いは、済んだ。帳簿のように、きっちりと。',
+            'だが街の人々は、まだ彼を横目で見る。施しの手の、その冷たさに気づいているのだ。',
+            '取り立てた金貨は袋の底で鳴り、暖炉の隅の松葉杖の行方は——まだ、決まっていない。',
+            '精霊たちの夜は終わった。けれど心の再生は、行いの数ではなく、温度で量られる。',
+            'スクルージの長い冬は、もう少しだけ、続くらしい。',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['ending', 'end_gray'], learning: ['l_tiny_tim'] } },
+      ],
+    },
+    // 温もりの残高が閾値を越えると、街の見え方が変わる。
+    {
+      id: 'ev_glow1',
+      trigger: { type: 'param', param: 'warmth', gte: 45 },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            'ふと顔を上げると、通りの窓に、ひとつまたひとつ、灯がともってゆくのが見えた。',
+            '……いや。灯りは、はじめからそこにあったのだ。わたしに、見え始めただけで。',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['town_glow1'] } },
+      ],
+    },
+    {
+      id: 'ev_glow2',
+      trigger: { type: 'param', param: 'warmth', gte: 80, requiresFlag: 'christmas_morning' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '広場の方から、歌が聞こえる。聖歌隊が、ツリーのまわりに集まりはじめたのだ。',
+            '窓という窓に灯がともり、ツリーは飾りの一粒まで輝いて——この街は、こんなに明るかったのか。',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['town_glow2'] } },
+      ],
+    },
+    {
+      id: 'ev_debts',
+      trigger: { type: 'questComplete', quest: 'sq_debts' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '三つの名前に、線を引いた。',
+            '帳簿は嘘をつかない。金貨の増減が、そのまま書いてある。だが今朝おぼえたのは——帳簿には書けない増減の方だ。',
+          ],
+        },
+        { type: 'effects', effects: { params: { remorse: -3 }, learning: ['l_moneylender'] } },
       ],
     },
     {
@@ -810,6 +1124,12 @@ export const christmasCarol: ContentPack = {
       title: '「神さまの祝福が、みんなの上に」',
       body: '物語を結ぶのはティムの祈り——God bless us, every one!　「みんなの上に」の一語に、この本のすべてがある。祝福は自分の家族だけでなく、定規で追われた聖歌の子にも、救貧院の子にも。スクルージは以後、クリスマスの祝い方を誰より知る男と呼ばれた。',
       tags: ['名台詞', '結び'],
+    },
+    l_moneylender: {
+      id: 'l_moneylender',
+      title: 'スクルージの商売',
+      body: 'スクルージの稼業は金貸し（手形割引）である。原作の未来の場面には、彼の死で「返済が延びる」と知って安堵してしまい、そんな自分たちに愕然とする若い夫婦——キャロラインとその夫が登場する。取り立ての権利は正当でも、その正当さが人をどう凍えさせるか。ディケンズは債務者の側の夜を、たった一場面で描いてみせた。',
+      tags: ['社会', '暮らし'],
     },
     l_scrooge_name: {
       id: 'l_scrooge_name',
@@ -1072,6 +1392,66 @@ export const christmasCarol: ContentPack = {
       requiresFlag: 'christmas_morning',
       once: true,
       effects: { dialogue: 'dlg_deed_bob' },
+    },
+
+    // ── 期日の帳簿——三人の借り手（sq_debts） ──
+    {
+      id: 'debtor_husband',
+      position: DEBTOR_POS.husband,
+      prompt: 'キャロラインの家の扉を叩く——今日が期日だ',
+      radius: 2.8,
+      requiresFlag: 'christmas_morning',
+      once: true,
+      effects: { dialogue: 'dlg_debt_husband' },
+    },
+    {
+      id: 'debtor_widow',
+      position: DEBTOR_POS.widow,
+      prompt: '寡婦の仕事場の扉を叩く——今日が期日だ',
+      radius: 2.8,
+      requiresFlag: 'christmas_morning',
+      once: true,
+      effects: { dialogue: 'dlg_debt_widow' },
+    },
+    {
+      id: 'debtor_clock',
+      position: DEBTOR_POS.clockmaker,
+      prompt: '時計職人の店の扉を叩く——今日が期日だ',
+      radius: 2.8,
+      requiresFlag: 'christmas_morning',
+      once: true,
+      effects: { dialogue: 'dlg_debt_clock' },
+    },
+
+    // ── 朝の施し（善意の経済） ──
+    {
+      id: 'give_carolboy',
+      position: [3.2, 5.4],
+      prompt: '聖歌の子の、今朝の歌を聞く',
+      radius: 2.6,
+      requiresFlag: 'christmas_morning',
+      once: true,
+      effects: { dialogue: 'dlg_give_carolboy' },
+    },
+    {
+      id: 'give_goose',
+      position: [14.8, 7.7],
+      prompt: '鶏肉屋の売れ残りの鵞鳥を、じっと見る',
+      radius: 2.6,
+      requiresFlag: 'christmas_morning',
+      requiresParam: { param: 'coins', gte: 4 },
+      once: true,
+      effects: { dialogue: 'dlg_goose' },
+    },
+    {
+      id: 'give_oven',
+      position: [15.2, 15],
+      prompt: 'パン屋の竈に並ぶ行列を見る',
+      radius: 2.6,
+      requiresFlag: 'christmas_morning',
+      requiresParam: { param: 'coins', gte: 6 },
+      once: true,
+      effects: { dialogue: 'dlg_oven' },
     },
 
     // ── 心を温める営み（くり返せる） ──

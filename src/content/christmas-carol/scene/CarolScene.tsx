@@ -32,6 +32,7 @@ import {
   DIM_TABLE,
   GRAVE,
   FOLK_POS,
+  DEBTOR_POS,
 } from '../layout';
 
 // Layer 3: 『クリスマス・キャロル』の舞台——1843年、雪のロンドン。
@@ -54,6 +55,7 @@ export function CarolScene() {
       <People />
       <QuotePapers />
       <NightLamps />
+      <WarmthGlow />
     </group>
   );
 }
@@ -433,6 +435,9 @@ const PAL: Record<string, CharacterPalette> = {
   tim: { skin: '#f2d4ae', shirt: '#9aa8b8', vest: '#6d7a8c', pants: '#4a5568', hair: '#6b5133' },
   merchant: { skin: '#e4bd96', shirt: '#3f4655', vest: '#2e3440', pants: '#282e3a', hair: '#7d7f86' },
   joe: { skin: '#d9b28c', shirt: '#655d4e', vest: '#514a3d', pants: '#3f3b33', hair: '#8b8778' },
+  husband: { skin: '#dcb18c', shirt: '#5c6657', vest: '#454e42', pants: '#39404a', hair: '#4a3a2a' },
+  widow: { skin: '#e3bd97', shirt: '#54495a', vest: '#413848', pants: '#35313d', hair: '#8d8a93' },
+  clock: { skin: '#ecc79f', shirt: '#6f7d99', vest: '#4e5a75', pants: '#3d4660', hair: '#3a2f22' },
 };
 
 function Figure({
@@ -515,8 +520,28 @@ function People() {
         </group>
       )}
 
-      {/* 結び——クラチット家の前に、生きているティムとボブ */}
-      {flags.ending && (
+      {/* 期日の借り手たち——線を引かれる（片が付く）と戸口から消える */}
+      {morning && !flags.debt1_done && (
+        <Figure pos={[DEBTOR_POS.husband[0], DEBTOR_POS.husband[1] + 1.4]} palette={PAL.husband} face={2.4} />
+      )}
+      {morning && !flags.debt2_done && (
+        <Figure pos={[DEBTOR_POS.widow[0], DEBTOR_POS.widow[1] + 1.5]} palette={PAL.widow} face={2.8} scale={0.94} />
+      )}
+      {morning && !flags.debt3_done && (
+        <Figure pos={[DEBTOR_POS.clockmaker[0], DEBTOR_POS.clockmaker[1] + 1.5]} palette={PAL.clock} face={3.0} />
+      )}
+
+      {/* 温もり80——広場のツリーに聖歌隊が集まる */}
+      {flags.town_glow2 && (
+        <group>
+          <Figure pos={[2.6, 3.9]} palette={PAL.boy} scale={0.8} face={-1.8} solid={false} />
+          <Figure pos={[3.4, 2.6]} palette={PAL.belle} face={-2.2} solid={false} />
+          <Figure pos={[2.2, 1.4]} palette={PAL.lamplighter} face={-2.6} solid={false} />
+        </group>
+      )}
+
+      {/* 結び——クラチット家の前に、生きているティムとボブ（灰の結末では現れない） */}
+      {flags.ending && !flags.end_gray && (
         <group>
           <Figure pos={[-19.2, 27.4]} palette={PAL.bob} face={2.8} />
           <Figure pos={[-20.6, 27.2]} palette={PAL.tim} scale={0.62} face={2.6} />
@@ -722,6 +747,53 @@ function Paper({ x, z }: { x: number; z: number }) {
           <meshStandardMaterial color="#ffe9a0" emissive="#ffd45e" emissiveIntensity={2.0} />
         </mesh>
       </group>
+    </group>
+  );
+}
+
+// ── 温もりの残高で、街の見え方が変わる ─────────────────────
+// warmth 45（town_glow1）: 家々の窓に灯がともる。80（town_glow2）: ツリーが輝きを増す。
+function WarmthGlow() {
+  const flags = useGame((s) => s.flags);
+  if (!flags.town_glow1) return null;
+  return (
+    <group>
+      {/* 灯り始めた窓——既存の窓の上に、ひとまわり明るい光の板を重ねる */}
+      {BUILDINGS.map(([cx, cz, hx, hz], i) => {
+        const face = cx < 0 ? 1 : -1;
+        const fx = cx + face * hx;
+        return (
+          <group key={i}>
+            <mesh position={[fx + face * 0.14, 1.7, cz - hz * 0.55]}>
+              <boxGeometry args={[0.08, 0.9, 0.78]} />
+              <meshStandardMaterial color="#ffd98a" emissive="#ffc25e" emissiveIntensity={2.2} />
+            </mesh>
+            <mesh position={[fx + face * 0.14, 1.7, cz + hz * 0.55]}>
+              <boxGeometry args={[0.08, 0.9, 0.78]} />
+              <meshStandardMaterial color="#ffd98a" emissive="#ffc25e" emissiveIntensity={2.2} />
+            </mesh>
+          </group>
+        );
+      })}
+      <pointLight position={[-14, 3, -5]} intensity={10} distance={14} color="#ffc25e" />
+      <pointLight position={[10, 3, 20]} intensity={10} distance={14} color="#ffc25e" />
+      {flags.town_glow2 && (
+        <group>
+          <pointLight position={[SQUARE[0], 5, SQUARE[1]]} intensity={30} distance={26} color="#ffe28a" />
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const a = (i / 6) * Math.PI * 2;
+            return (
+              <mesh
+                key={i}
+                position={[SQUARE[0] + Math.cos(a) * 1.9, 2.1, SQUARE[1] + Math.sin(a) * 1.9]}
+              >
+                <icosahedronGeometry args={[0.12, 0]} />
+                <meshStandardMaterial color="#ffe9a0" emissive="#ffd45e" emissiveIntensity={2.4} />
+              </mesh>
+            );
+          })}
+        </group>
+      )}
     </group>
   );
 }
