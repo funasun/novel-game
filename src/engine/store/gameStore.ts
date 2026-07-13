@@ -203,6 +203,11 @@ export const useGame = create<GameState>((set, get) => ({
       for (const f of effects.flags) flags[f] = true;
       set({ flags });
     }
+    if (effects.flagsOff) {
+      const flags = { ...get().flags };
+      for (const f of effects.flagsOff) delete flags[f];
+      set({ flags });
+    }
     if (effects.questAdd) {
       const quests = [...get().quests];
       for (const id of effects.questAdd) {

@@ -34,17 +34,20 @@ export const hamlet: ContentPack = {
   startTime: { day: 1, hour: 1 },
   spawn: SPAWN,
 
-  // 心の天気図。憂鬱・疑念・決意を可視化し、隠しパラメータで仮面と警戒を追う。
+  // 心の天気図。憂鬱・疑念・決意、そして宮廷の警戒——すべてのゲージが遊びに効く。
+  // 決意65で果たし合いが解禁され、警戒が高いと立ち聞きが閉じ、疑念の残量が結末の語りを変える。
   parameters: {
     melancholy: { label: '憂鬱', min: 0, max: 100, initial: 70 },
     doubt: { label: '疑念', min: 0, max: 100, initial: 20 },
     resolve: { label: '決意', min: 0, max: 100, initial: 10 },
-    mask: { label: '狂気の仮面', min: 0, max: 100, initial: 0, display: false },
-    suspicion: { label: '宮廷の警戒', min: 0, max: 100, initial: 0, display: false },
+    suspicion: { label: '宮廷の警戒', min: 0, max: 100, initial: 0 },
   },
 
   items: {
     script: { label: '「ゴンザーゴ殺し」の台本' },
+    ev_vial: { label: '聞き書き：毒瓶の行方' },
+    ev_orchard: { label: '聞き書き：果樹園の刻限' },
+    ev_inquest: { label: '聞き書き：検分の口止め' },
     flower_rosemary: { label: 'ローズマリー（追憶）' },
     flower_pansy: { label: '三色すみれ（物思い）' },
     flower_fennel: { label: 'ういきょう（へつらい）' },
@@ -120,7 +123,67 @@ export const hamlet: ContentPack = {
         'おれは昔お前を愛した。——いや、愛さなかった。忘れてしまえ。',
         'この世は雑草の茂る荒れ庭だ。誰も信じるな。おれのこともだ。さらばだ。',
       ],
-      effects: { flags: ['antic'], params: { mask: 45, melancholy: 8, suspicion: 15 }, learning: ['l_antic'] },
+      effects: { flags: ['antic'], params: { melancholy: 8, suspicion: 15 }, learning: ['l_antic'] },
+    },
+
+    // ── 狂気の仮面の裏表——素顔の行いと立ち聞き ──
+    dlg_horatio_true: {
+      id: 'dlg_horatio_true',
+      speaker: 'horatio',
+      lines: [
+        '……仮面を外したお顔は、ひさしぶりに見ます。',
+        'よいのです。わたしの前でまで、狂う要りようはありません。',
+        '重いものは、半分お預けください。学問はこういうとき役に立ちませんが——友の肩は、少しは役に立つ。',
+      ],
+      effects: { params: { melancholy: -12, doubt: -5 }, minutes: 30 },
+    },
+    dlg_listen_throne: {
+      id: 'dlg_listen_throne',
+      speaker: 'hamlet',
+      lines: [
+        '（壇の陰。狂人と侮られれば、誰もこちらを見ない）',
+        '王「——薬師の老人は、口が固かろうな」　侍従長「は。空の瓶ごと、海に沈めましてございます」',
+        '王「兄はよく庭で昼寝をした。薬草にも詳しかった。……いや、よい。この話は終いだ」',
+        '——空の毒瓶。たしかに、そう言った。',
+      ],
+      effects: {
+        items: { ev_vial: 1 },
+        counters: { evidence: 1 },
+        params: { doubt: -3, suspicion: 3 },
+        minutes: 20,
+      },
+    },
+    dlg_listen_tavern: {
+      id: 'dlg_listen_tavern',
+      speaker: 'hamlet',
+      lines: [
+        '（錨亭の窓の下。船乗りの声は、酒で大きくなる）',
+        '「城の小姓が言うにはな、先の王さまが倒れた昼、果樹園の木戸で新しい王さまとすれ違ったんだと」',
+        '「昼寝の刻限にか？　弟君はいつも礼拝の刻限だろう」「だから妙だって話さ。……おっと、この話は樽の底へ」',
+        '——果樹園の、あの刻限に。',
+      ],
+      effects: {
+        items: { ev_orchard: 1 },
+        counters: { evidence: 1 },
+        params: { doubt: -3, suspicion: 3 },
+        minutes: 20,
+      },
+    },
+    dlg_listen_gate: {
+      id: 'dlg_listen_gate',
+      speaker: 'hamlet',
+      lines: [
+        '（詰め所の陰。衛兵の私語は、夜風に乗って届く）',
+        '「先の王さまの検分に立ち会った爺さん、急に隠居して国境の村へ移ったろう」',
+        '「蛇の噛み口にしちゃ、耳のうしろが妙だったと漏らしてたな。……よせ、壁に耳ありだ」',
+        '——検分の口は、金で閉じられたか。',
+      ],
+      effects: {
+        items: { ev_inquest: 1 },
+        counters: { evidence: 1 },
+        params: { doubt: -3, suspicion: 3 },
+        minutes: 20,
+      },
     },
 
     // ── 第三幕：ねずみ捕り ──
@@ -148,9 +211,29 @@ export const hamlet: ContentPack = {
       lines: [
         '台本に、十二、三行ほど書き加えさせてもらう。',
         '眠る王の耳へ、毒を注ぐ——あの場を、そっくりそのまま。',
-        'さあ『ゴンザーゴ殺し』。今宵の主賓は、王だ。',
+        'さあ『ゴンザーゴ殺し』。今宵の主賓は、王だ。……さて、どう書く。',
       ],
-      effects: { items: { script: 1 }, flags: ['play_ready'], params: { resolve: 8 }, learning: ['l_play'] },
+      choices: [
+        {
+          text: '記憶だけを頼りに、書く',
+          effects: {
+            items: { script: 1 },
+            flags: ['play_ready'],
+            params: { resolve: 4 },
+            learning: ['l_play'],
+          },
+        },
+        {
+          text: '三つの聞き書きを織り込み、突きつけるように書く',
+          requiresFlag: 'evidence_full',
+          effects: {
+            items: { script: 1, ev_vial: -1, ev_orchard: -1, ev_inquest: -1 },
+            flags: ['play_ready', 'play_strong'],
+            params: { resolve: 8, doubt: -10 },
+            learning: ['l_play'],
+          },
+        },
+      ],
     },
     dlg_tobe: {
       id: 'dlg_tobe',
@@ -245,7 +328,7 @@ export const hamlet: ContentPack = {
       ],
       effects: {
         flags: ['closet_done', 'polonius_dead'],
-        params: { resolve: 10, melancholy: 15, suspicion: 30 },
+        params: { resolve: 6, melancholy: 15, suspicion: 30 },
         learning: ['l_polonius'],
       },
     },
@@ -370,7 +453,7 @@ export const hamlet: ContentPack = {
       ],
       effects: {
         flags: ['yorick'],
-        params: { melancholy: 10, resolve: 12, doubt: -10 },
+        params: { melancholy: 10, resolve: 8, doubt: -10 },
         learning: ['l_yorick'],
         questAdd: ['q_duel'],
       },
@@ -440,7 +523,8 @@ export const hamlet: ContentPack = {
     q_mousetrap: {
       id: 'q_mousetrap',
       title: 'ねずみ捕り',
-      description: '旅役者の芝居で、王の良心をからめとる。舞台の台本に、父の死になぞらえた一場を書き加えよ。',
+      description:
+        '旅役者の芝居で、王の良心をからめとる。舞台の台本に、父の死になぞらえた一場を書き加えよ。——急いで書くか。それとも仮面で聞き書きを三つ集め、刃のような台本にするか。',
       waypoint: [21, -1.5],
       goal: { type: 'flag', flag: 'play_ready' },
     },
@@ -461,12 +545,22 @@ export const hamlet: ContentPack = {
     q_duel: {
       id: 'q_duel',
       title: '果たし合い',
-      description: 'レアティーズの挑戦を受ける。中庭で剣を取り、運命に身をゆだねよ。',
+      description:
+        '心を定めよ——稽古・祈り・語らい・よりみちが決意を満たす（決意65で心が定まる）。心が定まったら、中庭で剣を取り、運命に身をゆだねよ。',
       waypoint: [0, 6],
       goal: { type: 'flag', flag: 'duel_start' },
     },
 
     // ── よりみち（城下の暮らし） ──
+    sq_evidence: {
+      id: 'sq_evidence',
+      title: '狂人の耳',
+      description:
+        '仮面をかぶっているあいだだけ、宮廷の口はゆるむ。玉座の壇・錨亭の窓の下・門の詰め所で三つの話を立ち聞きせよ。ただし警戒（70以上）が高いと、人はこちらの前で口をつぐむ。',
+      waypoint: [-8, -17],
+      goal: { type: 'counter', counter: 'evidence', count: 3 },
+      side: true,
+    },
     sq_rumors: {
       id: 'sq_rumors',
       title: '町の噂あつめ',
@@ -525,7 +619,7 @@ export const hamlet: ContentPack = {
           type: 'effects',
           effects: {
             flags: ['oath'],
-            params: { resolve: 30, doubt: 35, melancholy: 10 },
+            params: { resolve: 20, doubt: 35, melancholy: 10 },
             learning: ['l_ghost', 'l_denmark', 'l_town'],
             questAdd: ['q_madness', 'sq_rumors', 'sq_quotes', 'sq_walk'],
           },
@@ -561,10 +655,18 @@ export const hamlet: ContentPack = {
         {
           type: 'effects',
           effects: {
-            questAdd: ['q_mousetrap'],
+            questAdd: ['q_mousetrap', 'sq_evidence'],
             learning: ['l_mousetrap', 'l_elsinore'],
-            params: { doubt: -5, resolve: 10 },
+            params: { doubt: -5, resolve: 5 },
           },
+        },
+        {
+          type: 'narration',
+          lines: [
+            '（西の回廊と北の胸壁の物陰で、狂気の仮面を着け外しできる。',
+            '仮面のあいだは宮廷の立ち聞きが開き、素顔のあいだは友との本音が開く。',
+            '台本を書く前に聞き書きを三つ集めれば——劇中劇は、刃になる）',
+          ],
         },
       ],
     },
@@ -589,7 +691,7 @@ export const hamlet: ContentPack = {
           type: 'effects',
           effects: {
             flags: ['guilt_confirmed'],
-            params: { doubt: -25, resolve: 25, suspicion: 20 },
+            params: { doubt: -25, resolve: 10, suspicion: 20 },
             questAdd: ['q_closet'],
           },
         },
@@ -623,7 +725,7 @@ export const hamlet: ContentPack = {
         {
           type: 'effects',
           effects: {
-            params: { melancholy: 25, resolve: 8 },
+            params: { melancholy: 25, resolve: 4 },
             learning: ['l_ophelia'],
             questAdd: ['q_grave', 'sq_flowers'],
           },
@@ -723,6 +825,77 @@ export const hamlet: ContentPack = {
       ],
     },
 
+    // よりみち：聞き書きがそろう——強い台本の選択肢が開く
+    {
+      id: 'ev_evidence',
+      trigger: { type: 'questComplete', quest: 'sq_evidence' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '毒瓶。果樹園の刻限。買われた検分。',
+            '三つの聞き書きが、手の中でひとつの物語になる。亡霊の言葉と、寸分たがわぬ物語に。',
+            '狂人のふりをした耳だけが、これを聞けた。',
+          ],
+        },
+        {
+          type: 'effects',
+          effects: { flags: ['evidence_full'], params: { doubt: -8 }, learning: ['l_evidence'] },
+        },
+      ],
+    },
+
+    // 決意が満ちる——果たし合いの解禁（param trigger: 心の管理ループの目的地）
+    {
+      id: 'ev_resolve',
+      trigger: { type: 'param', param: 'resolve', gte: 65, requiresFlag: 'yorick' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '稽古の汗か、祈りの静けさか、それとも髑髏の教えか。',
+            'ゆれ続けた心の秤が、ふいに、止まる。',
+            '——もう、ためらわない。（中庭で、剣を取れ）',
+          ],
+        },
+        { type: 'effects', effects: { flags: ['resolved'] } },
+      ],
+    },
+
+    // 重すぎる夜——憂鬱の救済導線（param trigger）
+    {
+      id: 'ev_heavy_night',
+      trigger: { type: 'param', param: 'melancholy', gte: 85 },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '夜が、重すぎる。石壁も、海鳴りも、自分の影さえも。',
+            '気づけばホレイショーが隣に立ち、黙って海のほうを指さした。',
+            '（心が沈みきる前に——語らい、祈り、剣を振るい、海風に吹かれること）',
+          ],
+        },
+        { type: 'effects', effects: { params: { melancholy: -8 } } },
+      ],
+    },
+
+    // 宮廷の警戒が高まる——王の密偵（param trigger）
+    {
+      id: 'ev_spies',
+      trigger: { type: 'param', param: 'suspicion', gte: 60 },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            '見覚えのある顔が、二つ。学生時代の友——ローゼンクランツとギルデンスターン。',
+            'なつかしさに緩みかけた頬が、途中で止まる。二人の目が、値踏みするように光った。',
+            '王に雇われた耳だ。……警戒の高い城では、人はこちらの前で口をつぐむ。',
+          ],
+        },
+        { type: 'effects', effects: { params: { doubt: 6, melancholy: 4 }, learning: ['l_spies'] } },
+      ],
+    },
+
     // 第五幕：決闘、そして結末
     {
       id: 'ev_duel',
@@ -749,6 +922,34 @@ export const hamlet: ContentPack = {
             'ホレイショーが、その亡骸をそっと抱く。',
             '『さらば、王子。天使の群れが、歌でおまえを眠りへ運びますように。』',
             '——エルシノアに、朝が来る。',
+          ],
+        },
+      ],
+    },
+
+    // 結末の残響——疑念の残量で、ホレイショーの追想が変わる（param trigger）
+    {
+      id: 'ev_end_clear',
+      trigger: { type: 'param', param: 'doubt', lte: 15, requiresFlag: 'ending' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            'ホレイショーは思う。最後のあの目に、もう疑いの影はなかった、と。',
+            '問い続けた王子は、たしかな答えのなかで眠っている。',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'ev_end_heavy',
+      trigger: { type: 'param', param: 'doubt', gte: 16, requiresFlag: 'ending' },
+      steps: [
+        {
+          type: 'narration',
+          lines: [
+            'ホレイショーは思う。あの目は、最後まで問うていた、と。',
+            '答えの出ない問いを抱いたまま——それでも彼は、前へ出た。それがすべてだ。',
           ],
         },
       ],
@@ -853,6 +1054,20 @@ export const hamlet: ContentPack = {
       title: 'デンマークの選挙王制',
       body: '当時のデンマークの王は世襲ではなく、重臣会議が選ぶものだった。だから先王の子ハムレットではなく、弟クローディアスが王冠をかぶれた。ハムレット自身も終幕で「王の選出とおれの望みのあいだに、あの男が割り込んだ」と口にする。',
       tags: ['史実', '政治'],
+    },
+
+    // ── 心の天秤の学び ──
+    l_evidence: {
+      id: 'l_evidence',
+      title: '物証なき時代の立証',
+      body: '指紋も検死も裁判所もあてにならない世界で、王の罪をどう確かめるか。ハムレットの答えは「観察」だった。噂を集めて仮説を組み、劇中劇という実験で相手の反応を測る。狂気の仮面は、その観察のための隠れ蓑である。復讐劇の芯に、驚くほど科学の手続きが通っている。',
+      tags: ['戦略', '心理'],
+    },
+    l_spies: {
+      id: 'l_spies',
+      title: 'ローゼンクランツとギルデンスターン',
+      body: '王はハムレットの学友二人を城へ呼び、狂気の真相を探らせる。旧友の顔をした密偵——ハムレットは「おれは笛か？　吹けば鳴るとでも？」と二人を退けた。友情さえ監視の道具になる宮廷で、王子の孤独はいっそう深まっていく。',
+      tags: ['人物', '監視'],
     },
 
     // ── 台詞の欠片（七つの名台詞コレクション） ──
@@ -965,15 +1180,105 @@ export const hamlet: ContentPack = {
       once: true,
       effects: { dialogue: 'dlg_grave_1' },
     },
-    // 第五幕：果たし合いを受ける（q_duel）
+    // 第五幕：果たし合いを受ける（q_duel）——決意が満ちて（resolved）初めて現れる
     {
       id: 'accept_duel',
       position: [0, 6],
       prompt: '剣を取り、レアティーズの果たし合いに応じる',
       radius: 3.6,
-      requiresFlag: 'yorick',
+      requiresFlag: 'resolved',
       once: true,
       effects: { dialogue: 'dlg_duel_challenge' },
+    },
+
+    // ═══ 狂気の仮面——着脱トグル（flagsOff）。仮面が立ち聞きと素顔を分ける ═══
+    {
+      id: 'mask_on_gallery',
+      position: [-23, 9],
+      prompt: '回廊の柱の陰で、狂気の仮面をかぶる',
+      radius: 2.8,
+      requiresFlag: 'antic',
+      hideFlag: 'mask_worn',
+      effects: { flags: ['mask_worn'], minutes: 5 },
+    },
+    {
+      id: 'mask_off_gallery',
+      position: [-23, 9],
+      prompt: '仮面を外し、素顔に戻る',
+      radius: 2.8,
+      requiresFlag: 'mask_worn',
+      effects: { flagsOff: ['mask_worn'], minutes: 5 },
+    },
+    {
+      id: 'mask_on_wall',
+      position: [-4, -28.5],
+      prompt: '胸壁の物陰で、狂気の仮面をかぶる',
+      radius: 2.8,
+      requiresFlag: 'antic',
+      hideFlag: 'mask_worn',
+      effects: { flags: ['mask_worn'], minutes: 5 },
+    },
+    {
+      id: 'mask_off_wall',
+      position: [-4, -28.5],
+      prompt: '仮面を外し、素顔に戻る',
+      radius: 2.8,
+      requiresFlag: 'mask_worn',
+      effects: { flagsOff: ['mask_worn'], minutes: 5 },
+    },
+
+    // ═══ 立ち聞き（sq_evidence）——仮面ON かつ 警戒70未満のときだけ ═══
+    {
+      id: 'listen_throne',
+      position: [-8, -17],
+      prompt: '壇の陰で、王と侍従長の立ち話に耳を澄ます',
+      radius: 2.8,
+      requiresFlag: 'mask_worn',
+      requiresParam: { param: 'suspicion', lte: 69 },
+      once: true,
+      effects: { dialogue: 'dlg_listen_throne' },
+    },
+    {
+      id: 'listen_tavern',
+      position: [-8.5, 62.5],
+      prompt: '錨亭の窓の下で、船乗りの噂に耳を澄ます',
+      radius: 2.8,
+      requiresFlag: 'mask_worn',
+      requiresParam: { param: 'suspicion', lte: 69 },
+      once: true,
+      effects: { dialogue: 'dlg_listen_tavern' },
+    },
+    {
+      id: 'listen_gate',
+      position: [-4, 38.5],
+      prompt: '詰め所の陰で、衛兵の私語に耳を澄ます',
+      radius: 2.8,
+      requiresFlag: 'mask_worn',
+      requiresParam: { param: 'suspicion', lte: 69 },
+      once: true,
+      effects: { dialogue: 'dlg_listen_gate' },
+    },
+
+    // ═══ 素顔の行い——仮面を外しているときだけ ═══
+    {
+      id: 'horatio_true',
+      position: [4, 13],
+      prompt: '素顔で、ホレイショーに胸の内を明かす',
+      radius: 2.4,
+      requiresFlag: 'antic',
+      hideFlag: 'mask_worn',
+      once: true,
+      effects: { dialogue: 'dlg_horatio_true' },
+    },
+    {
+      id: 'glare_throne',
+      position: [0, -14.5],
+      prompt: '素顔のまま、玉座の王を見据える',
+      radius: 2.6,
+      requiresFlag: 'antic',
+      hideFlag: 'mask_worn',
+      cooldownHours: 12,
+      effects: { params: { resolve: 3, suspicion: 8, melancholy: -2 }, minutes: 15 },
     },
 
     // ═══ 城下の噂（sq_rumors）——四人と話す ═══
@@ -1140,7 +1445,7 @@ export const hamlet: ContentPack = {
       radius: 3,
       cooldownHours: 10,
       effects: {
-        params: { melancholy: -5, resolve: 2 },
+        params: { melancholy: -5, resolve: 2, suspicion: -3 },
         minutes: 45,
       },
     },

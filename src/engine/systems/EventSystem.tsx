@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useGame } from '../store/gameStore';
-import type { EventDef, EventStep } from '../types';
+import { paramCondMet, type EventDef, type EventStep } from '../types';
 
 // Layer 1: 物語イベントの発火と逐次実行。
 // trigger（開始/フラグ/時刻/クエスト完了）を監視し、steps（ナレーション/会話/効果/就寝）を順に流す。
@@ -96,6 +96,13 @@ function checkTriggers(s: GameSnapshot): void {
       s.quests.some((q) => q.id === t.quest && q.status === 'done')
     ) {
       fire(ev);
+    } else if (
+      t.type === 'param' &&
+      (!t.requiresFlag || s.flags[t.requiresFlag]) &&
+      paramCondMet(t, s.params)
+    ) {
+      // 心の状態（パラメータ閾値）が物語を動かす
+      fire(ev);
     }
   }
 }
@@ -116,7 +123,8 @@ export function EventSystem() {
       if (
         state.flags !== prev.flags ||
         state.time !== prev.time ||
-        state.quests !== prev.quests
+        state.quests !== prev.quests ||
+        state.params !== prev.params
       ) {
         checkTriggers(state);
       }

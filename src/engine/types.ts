@@ -6,6 +6,7 @@ export interface Effects {
   params?: Record<string, number>; // パラメータ増減
   items?: Record<string, number>; // 所持品増減
   flags?: string[]; // 立てるフラグ
+  flagsOff?: string[]; // 下ろすフラグ（トグル・状態機械・くり返しの営みに）
   counters?: Record<string, number>; // カウンタ増減
   minutes?: number; // 消費する時間（分）
   questAdd?: string[];
@@ -15,9 +16,26 @@ export interface Effects {
   teleport?: [number, number]; // XZへ瞬間移動（章移動・夢の場面転換など）
 }
 
+// パラメータ条件。「心が満ちたら/尽きたら」をデータで書くための語彙。
+// イベントの発火・選択肢の開放・行いの出現をパラメータでゲートできる。
+export interface ParamCond {
+  param: string;
+  gte?: number; // params[param] >= gte
+  lte?: number; // params[param] <= lte
+}
+
+export function paramCondMet(cond: ParamCond, params: Record<string, number>): boolean {
+  const v = params[cond.param] ?? 0;
+  if (cond.gte !== undefined && v < cond.gte) return false;
+  if (cond.lte !== undefined && v > cond.lte) return false;
+  return true;
+}
+
 export interface DialogueChoice {
   text: string;
   effects?: Effects;
+  requiresFlag?: string; // このフラグが立っているときだけ選べる
+  requiresParam?: ParamCond; // 心の状態が満ちているときだけ選べる（満たさない選択肢は薄く表示）
 }
 
 export interface DialogueDef {
@@ -46,7 +64,8 @@ export type EventTrigger =
   | { type: 'gameStart' }
   | { type: 'flag'; flag: string }
   | { type: 'time'; day?: number; hour: number }
-  | { type: 'questComplete'; quest: string };
+  | { type: 'questComplete'; quest: string }
+  | ({ type: 'param'; requiresFlag?: string } & ParamCond); // パラメータ閾値（心の状態が物語を動かす）
 
 export type EventStep =
   | { type: 'narration'; lines: string[] }
@@ -78,6 +97,8 @@ export interface InteractableDef {
   requiresFlag?: string; // このフラグが立つまで存在しない
   hideFlag?: string; // このフラグが立ったら消える
   cooldownHours?: number; // 使用後この時間（ゲーム内）休眠して復活する採集資源
+  requiresItems?: Record<string, number>; // これだけ持っているときだけ現れる（供える・渡す・使う）
+  requiresParam?: ParamCond; // 心の状態（残高）が満ちているときだけ現れる（施し・支払い）
 }
 
 // クラフト/建設レシピ。effects でフラグを立てれば「建設」（Sceneがフラグで建物を描く）、

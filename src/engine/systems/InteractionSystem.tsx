@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { playerPosition } from '../playerState';
 import { useGame, isUiLocked, totalMinutes } from '../store/gameStore';
-import type { InteractableDef } from '../types';
+import { paramCondMet, type InteractableDef } from '../types';
 
 // Layer 1: 近接インタラクト。プレイヤーの近くにある対象を検出し、Eキーで実行する。
 // 対象の定義（場所・効果）はすべてコンテンツ側データ。
@@ -13,6 +13,8 @@ export function interactableActive(
   used: Record<string, boolean>,
   usedAt?: Record<string, number>,
   nowMinutes?: number,
+  inventory?: Record<string, number>,
+  params?: Record<string, number>,
 ): boolean {
   if (def.once && used[def.id]) return false;
   if (def.requiresFlag && !flags[def.requiresFlag]) return false;
@@ -22,6 +24,13 @@ export function interactableActive(
     const at = usedAt[def.id];
     if (at !== undefined && nowMinutes - at < def.cooldownHours * 60) return false;
   }
+  // 供える・渡す・払う：持ち物や心の状態（残高）が満ちているときだけ現れる
+  if (def.requiresItems) {
+    for (const [item, n] of Object.entries(def.requiresItems)) {
+      if (((inventory ?? {})[item] ?? 0) < n) return false;
+    }
+  }
+  if (def.requiresParam && !paramCondMet(def.requiresParam, params ?? {})) return false;
   return true;
 }
 
@@ -58,7 +67,8 @@ export function InteractionSystem() {
     let bestDist = Infinity;
     const now = totalMinutes(s.time);
     for (const def of s.pack.interactables) {
-      if (!interactableActive(def, s.flags, s.usedInteractables, s.usedAt, now)) continue;
+      if (!interactableActive(def, s.flags, s.usedInteractables, s.usedAt, now, s.inventory, s.params))
+        continue;
       const dx = def.position[0] - playerPosition.x;
       const dz = def.position[1] - playerPosition.z;
       const dist = Math.hypot(dx, dz);

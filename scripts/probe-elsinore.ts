@@ -88,6 +88,15 @@ w('paper_brevity', 8.5, -10);
 w('paper_mirror', 25.5, 0.5);
 w('daisy graveyard', -15.5, 26.5);
 
+console.log('=== 心の天秤（第2次改修）の新設スポット ===');
+w('mask gallery', -23, 9);
+w('mask wall', -4, -28.5);
+w('listen_throne', -8, -17);
+w('listen_tavern', -8.5, 62.5);
+w('listen_gate', -4, 38.5);
+w('horatio_true', 4, 13);
+w('glare_throne', 0, -14.5);
+
 console.log('=== 城内NPC回帰（王と王妃は玉座の壇の上＝非歩行域が正） ===');
 for (const [k, [x, z]] of Object.entries(POS)) {
   const onDais = k === 'claudius' || k === 'gertrude';
