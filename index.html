@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <!-- ホーム画面に追加した際、ブラウザUI（URLバー等）を消して全画面起動する。
+         iPhone Safari は要素の全画面APIを持たないため、これが真の全画面への唯一の道。 -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="名作古典ゲーム" />
+    <title>十五少年漂流記</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0b1d2a;
+        font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+        /* 慣性スクロールでの余白露出を抑止 */
+        overscroll-behavior: none;
+      }
+      /* 実表示領域にぴたりと固定。dvh はツールバーの出入りに追従する。 */
+      #root {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+      }
+    </style>
+    <script type="module" crossorigin src="/novel-game/assets/index-DVzwTZCY.js"></script>
+  <link rel="manifest" href="/novel-game/manifest.webmanifest"></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
